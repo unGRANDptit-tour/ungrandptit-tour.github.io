@@ -209,6 +209,8 @@ button{font:inherit;color:inherit;}
 /* ---------- chips ---------- */
 .chip-row{display:flex; gap:6px; overflow-x:auto; padding:8px 16px; scrollbar-width:none;}
 .chip-row::-webkit-scrollbar{display:none;}
+.chip-row[hidden]{display:none;}
+.sub-chip-row{padding-top:2px;}
 .chip{
   flex:none;
   padding:6px 12px; border-radius:999px;
@@ -217,6 +219,34 @@ button{font:inherit;color:inherit;}
   white-space:nowrap;
 }
 .chip.active{background:var(--forest); border-color:var(--forest); color:var(--paper-raised); font-weight:600;}
+
+/* ---------- home hero ---------- */
+.home-hero{
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  gap:6px; padding:28px 20px 18px;
+}
+.home-hero-logo{
+  width:64px; height:64px; border-radius:18px; object-fit:cover;
+  box-shadow:0 4px 14px var(--shadow); margin-bottom:6px;
+}
+.home-hero-title{font-size:26px; margin:0;}
+.home-hero-tag{margin:0; color:var(--ink-soft); font-size:13px;}
+.home-hero-intro{
+  margin:8px 0 4px; color:var(--ink-soft); font-size:13.5px; line-height:1.55;
+  max-width:38ch;
+}
+.home-menu{
+  display:flex; flex-wrap:wrap; justify-content:center; gap:8px;
+  margin-top:14px; width:100%;
+}
+.home-menu-item{
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  flex:1 1 76px; min-width:76px; max-width:120px;
+  padding:12px 8px; border-radius:14px;
+  background:var(--paper-raised); border:1px solid var(--line);
+  color:var(--ink); text-decoration:none; font-size:12px; font-weight:600;
+}
+.home-menu-item svg{width:20px; height:20px; stroke:var(--forest);}
 
 /* ---------- cards ---------- */
 .rank-list, .fiche-list{display:flex; flex-direction:column; gap:10px; padding:10px 16px 6px;}
@@ -598,6 +628,7 @@ button{font:inherit;color:inherit;}
 
 /* ---------- real leaflet map page ---------- */
 #mapEl.real-map{height:min(62vh,460px); background:var(--paper-sunken);}
+#mapEl.real-map.compact{height:min(38vh,320px); border-radius:14px; margin:0 16px 4px; width:calc(100% - 32px); overflow:hidden;}
 .leaflet-tile-pane img{filter:saturate(.9);}
 :root:not([data-theme="light"]) .leaflet-tile-pane img{filter:saturate(.85) brightness(.88) contrast(1.05);}
 :root[data-theme="dark"] .leaflet-tile-pane img{filter:saturate(.85) brightness(.88) contrast(1.05);}

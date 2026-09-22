@@ -21,6 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Libre+Franklin:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css">
+
 <script>(function(){try{var t=localStorage.getItem('ugpt-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
 </head>
 <body>
@@ -52,11 +53,25 @@
     <div class="chip-row" id="themeChips">
       <button class="chip active" data-theme="tous" type="button">Tous</button><button class="chip" data-theme="patrimoine" type="button">Patrimoine &amp; architecture</button><button class="chip" data-theme="spirituel" type="button">Chemins spirituels</button><button class="chip" data-theme="insolite" type="button">Insolite &amp; extraordinaire</button><button class="chip" data-theme="nature" type="button">Nature &amp; paysages</button>
     </div>
+    <div class="eyebrow sub-eyebrow" style="padding:2px 16px 0;" id="subEyebrow" hidden>Sous-catégorie</div>
+    <div class="chip-row sub-chip-row" id="subChips-patrimoine" data-for-theme="patrimoine" hidden>
+      <button class="chip active" data-sub="tous" type="button">Toutes</button><button class="chip" data-sub="chateaux" type="button">Châteaux &amp; demeures historiques</button><button class="chip" data-sub="villages" type="button">Villages de caractère</button><button class="chip" data-sub="religieux" type="button">Architecture religieuse</button><button class="chip" data-sub="industriel" type="button">Vestiges industriels &amp; patrimoine ouvrier</button><button class="chip" data-sub="ouvrages" type="button">Ponts, canaux &amp; ouvrages d'art</button>
+    </div>
+    <div class="chip-row sub-chip-row" id="subChips-spirituel" data-for-theme="spirituel" hidden>
+      <button class="chip active" data-sub="tous" type="button">Toutes</button><button class="chip" data-sub="pelerinage" type="button">Sanctuaires &amp; lieux de pèlerinage</button><button class="chip" data-sub="abbayes" type="button">Abbayes &amp; monastères</button><button class="chip" data-sub="chemins" type="button">Chemins spirituels &amp; de randonnée</button><button class="chip" data-sub="megalithes" type="button">Sites mégalithiques &amp; sacrés</button>
+    </div>
+    <div class="chip-row sub-chip-row" id="subChips-insolite" data-for-theme="insolite" hidden>
+      <button class="chip active" data-sub="tous" type="button">Toutes</button><button class="chip" data-sub="art_brut" type="button">Art brut &amp; environnements visionnaires</button><button class="chip" data-sub="abandonne" type="button">Lieux abandonnés &amp; friches</button><button class="chip" data-sub="curiosites" type="button">Curiosités naturelles insolites</button><button class="chip" data-sub="musees" type="button">Musées atypiques &amp; collections privées</button><button class="chip" data-sub="architecture_etrange" type="button">Constructions étranges &amp; décalées</button>
+    </div>
+    <div class="chip-row sub-chip-row" id="subChips-nature" data-for-theme="nature" hidden>
+      <button class="chip active" data-sub="tous" type="button">Toutes</button><button class="chip" data-sub="grottes" type="button">Grottes &amp; sites géologiques</button><button class="chip" data-sub="arbres" type="button">Forêts &amp; arbres remarquables</button><button class="chip" data-sub="eau" type="button">Lacs, rivières &amp; cascades</button><button class="chip" data-sub="panoramas" type="button">Points de vue &amp; panoramas</button><button class="chip" data-sub="reserves" type="button">Réserves naturelles &amp; faune sauvage</button>
+    </div>
+    
     <div class="eyebrow" style="padding:2px 16px 0;">Région</div>
     <div class="chip-row" id="regionChips">
-      <button class="chip active" data-region="tous" type="button">Toutes</button><button class="chip" data-region="occitanie" type="button">Occitanie</button><button class="chip" data-region="aura" type="button">Auvergne-Rhône-Alpes</button><button class="chip" data-region="naquitaine" type="button">Nouvelle-Aquitaine</button>
+      <button class="chip active" data-region="tous" type="button">Toutes</button><button class="chip" data-region="aura" type="button">Auvergne-Rhône-Alpes</button><button class="chip" data-region="bfc" type="button">Bourgogne-Franche-Comté</button><button class="chip" data-region="bretagne" type="button">Bretagne</button><button class="chip" data-region="cvl" type="button">Centre-Val de Loire</button><button class="chip" data-region="corse" type="button">Corse</button><button class="chip" data-region="grand_est" type="button">Grand Est</button><button class="chip" data-region="hdf" type="button">Hauts-de-France</button><button class="chip" data-region="idf" type="button">Île-de-France</button><button class="chip" data-region="normandie" type="button">Normandie</button><button class="chip" data-region="naquitaine" type="button">Nouvelle-Aquitaine</button><button class="chip" data-region="occitanie" type="button">Occitanie</button><button class="chip" data-region="pdl" type="button">Pays de la Loire</button><button class="chip" data-region="paca" type="button">Provence-Alpes-Côte d'Azur</button>
     </div>
-    <div class="rank-list" id="rankList"><a class="fiche-card" href="/fiches/maison-couleur-du-temps/" data-themes="insolite" data-region="aura">
+    <div class="rank-list" id="rankList"><a class="fiche-card" href="/fiches/maison-couleur-du-temps/" data-themes="insolite" data-region="aura" data-country="france" data-sub="art_brut">
     <span class="rank-num">1</span>
     <div class="card-glyph theme-insolite"><img src="/assets/img/fiches/maison-couleur-du-temps-hero.jpg" alt=""></div>
     <div class="card-body">
