@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ungrandptittour.github.io/sitemap.xml

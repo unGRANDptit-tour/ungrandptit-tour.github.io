@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Créer mon itinéraire — Un Grand P'tit Tour</title>
+<meta name="description" content="Générez un itinéraire de voyage réaliste à partir des lieux vérifiés du magazine, relu par la rédaction avant confirmation.">
+<link rel="canonical" href="https://ungrandptittour.github.io/itineraire/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Un Grand P'tit Tour">
+<meta property="og:title" content="Créer mon itinéraire — Un Grand P'tit Tour">
+<meta property="og:description" content="Générez un itinéraire de voyage réaliste à partir des lieux vérifiés du magazine, relu par la rédaction avant confirmation.">
+<meta property="og:url" content="https://ungrandptittour.github.io/itineraire/">
+<meta property="og:image" content="https://ungrandptittour.github.io/assets/img/logo.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Créer mon itinéraire — Un Grand P'tit Tour">
+<meta name="twitter:description" content="Générez un itinéraire de voyage réaliste à partir des lieux vérifiés du magazine, relu par la rédaction avant confirmation.">
+<meta name="twitter:image" content="https://ungrandptittour.github.io/assets/img/logo.jpg">
+<link rel="icon" href="/assets/img/logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Libre+Franklin:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/style.css">
+<script>(function(){try{var t=localStorage.getItem('ugpt-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="brand-row">
+      <a href="/"><img class="brand-logo" src="/assets/img/logo.jpg" alt="Logo Un Grand P'tit Tour"></a>
+      <div class="brand">
+        <a href="/" style="text-decoration:none;"><span class="name display">Un Grand P'tit Tour</span></a>
+        <span class="tagline">le mag — lieux insolites &amp; patrimoine français</span>
+        <a class="handle" href="https://www.instagram.com/un_grand_ptit_tour" target="_blank" rel="noopener">@un_grand_ptit_tour</a>
+      </div>
+    </div>
+    <button class="icon-btn" id="themeToggleBtn" title="Apparence" aria-label="Changer l'apparence" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7"/></svg>
+    </button>
+  </div>
+  <div class="status-banner" id="statusBanner" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 9v4M12 16.5h.01M10.3 3.9 2.7 17.3a1.8 1.8 0 0 0 1.56 2.7h15.5a1.8 1.8 0 0 0 1.56-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z"/></svg>
+    <span id="statusBannerText">Les votes, commentaires et suggestions sont temporairement suspendus.</span>
+  </div>
+  <div class="views">
+    <section class="view">
+    <div class="section-head">
+      <h1>Créer mon itinéraire</h1>
+      <p>Un parcours construit uniquement à partir des lieux vérifiés du magazine — jamais inventé — puis relu par la rédaction avant d'être définitif.</p>
+    </div>
+    <form class="form-wrap" id="itinForm">
+      <div class="field">
+        <label for="it-days">Nombre de jours</label>
+        <input id="it-days" type="number" min="1" max="14" value="2" required>
+      </div>
+      <div class="field">
+        <label>Thèmes <span class="hint">(optionnel — laissez vide pour tous)</span></label>
+        <div class="itin-toggle-row" id="it-themes">
+          <button type="button" class="itin-toggle" data-value="patrimoine">Patrimoine &amp; architecture</button><button type="button" class="itin-toggle" data-value="spirituel">Chemins spirituels</button><button type="button" class="itin-toggle" data-value="insolite">Insolite &amp; extraordinaire</button><button type="button" class="itin-toggle" data-value="nature">Nature &amp; paysages</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Régions <span class="hint">(optionnel — laissez vide pour toutes)</span></label>
+        <div class="itin-toggle-row" id="it-regions">
+          <button type="button" class="itin-toggle" data-value="occitanie">Occitanie</button><button type="button" class="itin-toggle" data-value="aura">Auvergne-Rhône-Alpes</button><button type="button" class="itin-toggle" data-value="naquitaine">Nouvelle-Aquitaine</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="it-pace">Rythme</label>
+        <select id="it-pace">
+          <option value="detendu">Détendu (4h/jour)</option><option value="standard" selected>Standard (6h/jour)</option><option value="intensif">Intensif (8h/jour)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="it-place-request">Un lieu en particulier que vous aimeriez inclure et qu'on n'a pas encore ? <span class="hint">(optionnel)</span></label>
+        <textarea id="it-place-request" rows="2" maxlength="300" placeholder="Nom du lieu, ville, pourquoi vous y tenez…"></textarea>
+        <p class="hint" style="margin-top:2px;">Il apparaîtra dans votre itinéraire, signalé comme votre propre ajout — pas un conseil de la rédaction, qui n'a pas encore vérifié ce lieu.</p>
+      </div>
+      <div class="field">
+        <label for="it-email">Votre email <span class="hint">(optionnel, pour être prévenu·e une fois l'itinéraire validé)</span></label>
+        <input id="it-email" type="email">
+      </div>
+      <button class="btn-primary" id="it-submit" type="submit">Générer mon itinéraire</button>
+      <p class="muted-note" id="it-note" style="margin-top:10px;"></p>
+    </form>
+    <div id="itineraryResult"></div>
+    <footer class="site-footer">
+    <div class="legal-links">
+      <a href="/mentions-legales/">Mentions légales</a>
+      <a href="/confidentialite/">Confidentialité</a>
+      <a href="/cookies/">Cookies</a>
+    </div>
+    <div class="copyright">© 2026 Un Grand P'tit Tour — contenu et photos @un_grand_ptit_tour</div>
+  </footer>
+  </section>
+  <script>
+    window.__FICHES_FOR_ITINERARY__ = [{"id":"maison-couleur-du-temps","title":"La Maison Couleur du Temps","themes":["insolite"],"region":"aura","coords":{"lon":2.765,"lat":46.4775},"visitDurationMin":75,"image":"/assets/img/fiches/maison-couleur-du-temps-hero.jpg","url":"/fiches/maison-couleur-du-temps/"}];
+    window.__UGPT_ITINERARY_CFG__ = {"paceHoursPerDay":{"detendu":4,"standard":6,"intensif":8},"paceLabels":{"detendu":"Détendu (4h/jour)","standard":"Standard (6h/jour)","intensif":"Intensif (8h/jour)"},"avgSpeedKmh":55,"roadDetourFactor":1.3,"maxStopsPerDay":4,"defaultVisitDurationMin":60,"maxDaysRequestable":14};
+  </script>
+  </div>
+  <nav class="tabbar">
+    <a class="tab-btn" href="/">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 4.8c2-.7 5-1 8 0v14.4c-3-1-6-.7-8 0V4.8ZM20 4.8c-2-.7-5-1-8 0v14.4c3-1 6-.7 8 0V4.8Z"/></svg>
+        <span>Accueil</span>
+      </a>
+    <a class="tab-btn" href="/carte/">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg>
+        <span>Carte</span>
+      </a>
+    <a class="tab-btn" href="/classement/">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M8 20V10M13 20V4M18 20v-7"/><path d="M4 20h16"/></svg>
+        <span>Classement</span>
+      </a>
+    <a class="tab-btn" href="/contribuer/">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 20.5 4.9 17 16 5.9a1.7 1.7 0 0 1 2.4 0l.7.7a1.7 1.7 0 0 1 0 2.4L8 20l-4 .5Z"/></svg>
+        <span>Contribuer</span>
+      </a>
+    <a class="tab-btn" href="/bord/">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5"/><path d="M12 12 15.5 8.5M12 7v1.2M17 12h-1.2M12 17v-1.2M7 12h1.2"/></svg>
+        <span>Bord</span>
+      </a>
+  </nav>
+</div>
+
+<div class="cookie-banner" id="cookieBanner" hidden>
+    <div class="cookie-banner-inner">
+      <p>Ce site utilise des cookies de mesure d'audience (Google Analytics) pour comprendre comment le magazine est lu. Vous pouvez accepter ou refuser — voir notre <a href="/cookies/">politique cookies</a>.</p>
+      <div class="cookie-actions">
+        <button class="btn-primary" id="cookieAccept" type="button">Accepter</button>
+        <button class="btn-secondary" id="cookieRefuse" type="button">Refuser</button>
+      </div>
+    </div>
+  </div>
+<div class="toast" id="toast"></div>
+<script defer src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script defer src="/assets/js/firebase-init.js"></script>
+<script defer src="/assets/js/theme.js"></script>
+<script defer src="/assets/js/status-gate.js"></script>
+<script defer src="/assets/js/analytics.js"></script>
+<script defer src="/assets/js/cookies.js"></script>
+<script defer src="/assets/js/itinerary-engine.js"></script>
+<script defer src="/assets/js/itinerary-render.js"></script>
+<script defer src="/assets/js/itinerary.js"></script>
+</body>
+</html>
