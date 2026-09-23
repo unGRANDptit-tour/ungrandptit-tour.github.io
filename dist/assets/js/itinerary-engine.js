@@ -90,19 +90,52 @@
 
   /* Filtre + score les fiches candidates avant construction du plan.
      Ne conserve QUE les fiches vérifiées avec des coordonnées : on ne
-     propose jamais un brouillon non confirmé dans un itinéraire. */
+     propose jamais un brouillon non confirmé dans un itinéraire.
+     `params.ficheIds`, quand fourni (parcours "point de départ + lieux
+     validés par le visiteur" de /itineraire/), restreint en plus aux
+     seuls identifiants listés — thèmes/régions restent utilisables par
+     ailleurs (recalcul admin, etc.) mais les deux filtres se combinent
+     plutôt que de s'exclure. */
   function filterCandidates(fiches, params) {
     var themes = params.themes && params.themes.length ? params.themes : null;
     var regions = params.regions && params.regions.length ? params.regions : null;
+    var idSet = null;
+    if (params.ficheIds && params.ficheIds.length) {
+      idSet = {};
+      params.ficheIds.forEach(function (id) {
+        idSet[id] = true;
+      });
+    }
     return fiches.filter(function (f) {
       if (f.status && f.status !== "verifie") return false;
       if (!f.coords || typeof f.coords.lat !== "number" || typeof f.coords.lon !== "number") return false;
+      if (idSet && !idSet[f.id]) return false;
       var themeOk = !themes || (f.themes || []).some(function (t) {
         return themes.indexOf(t) !== -1;
       });
       var regionOk = !regions || regions.indexOf(f.region) !== -1;
       return themeOk && regionOk;
     });
+  }
+
+  /* Fiches vérifiées à coordonnées connues, dans un rayon donné (à vol
+     d'oiseau) autour d'un point — utilisé par /itineraire/ pour proposer
+     les lieux "autour" du point de départ indiqué par le visiteur, et
+     pour repérer les coups de cœur de la rédaction un peu plus loin.
+     Retourne [{fiche, distanceKm}], trié du plus proche au plus loin. */
+  function nearbyFiches(fiches, baseCoords, maxKm) {
+    if (!baseCoords || typeof baseCoords.lat !== "number" || typeof baseCoords.lon !== "number") return [];
+    var out = [];
+    fiches.forEach(function (f) {
+      if (f.status && f.status !== "verifie") return;
+      if (!f.coords || typeof f.coords.lat !== "number" || typeof f.coords.lon !== "number") return;
+      var dist = haversineKm(baseCoords, f.coords);
+      if (dist <= maxKm) out.push({ fiche: f, distanceKm: dist });
+    });
+    out.sort(function (a, b) {
+      return a.distanceKm - b.distanceKm;
+    });
+    return out;
   }
 
   /* Construit le plan jour par jour. Ne force jamais un jour vide ou un
@@ -270,5 +303,6 @@
     formatDuration: formatDuration,
     planItinerary: planItinerary,
     recomputeTimes: recomputeTimes,
+    nearbyFiches: nearbyFiches,
   };
 });

@@ -39,6 +39,7 @@
   var modSuggestions = document.getElementById("modSuggestions");
   var modNewsletter = document.getElementById("modNewsletter");
   var modItineraries = document.getElementById("modItineraries");
+  var modPhotoFocus = document.getElementById("modPhotoFocus");
   var stopBtn = document.getElementById("stopBtn");
   var stopLabel = document.getElementById("stopBtnLabel");
 
@@ -54,6 +55,16 @@
     itinFicheById[f.id] = f;
   });
   var itinCfg = window.__UGPT_ITINERARY_CFG__ || {};
+
+  // Galeries de chaque fiche (id, titre, photos + cadrage par défaut
+  // écrit dans fiches.json) — pour le panneau "Cadrage des photos".
+  var galleries = window.__FICHES_GALLERIES__ || [];
+  var FOCUS_OPTIONS = [
+    { value: "", label: "Réglage automatique" },
+    { value: "haut", label: "Haut" },
+    { value: "centre", label: "Centre" },
+    { value: "bas", label: "Bas" },
+  ];
 
   function paintDash() {
     if (!dashGrid) return;
@@ -159,6 +170,9 @@
     // manipulée par les boutons d'édition ; `dirty` évite qu'une mise à
     // jour temps réel écrase une édition en cours avant enregistrement.
     var itinState = {};
+    // Réglages de cadrage en direct (collection Firestore "photoFocus"),
+    // indexés par id de fiche -> { nomDePhoto: "haut"|"centre"|"bas" }.
+    var photoFocusOverrides = {};
     function stopModListeners() {
       unsubs.forEach(function (u) {
         try {
@@ -175,7 +189,9 @@
       if (modSuggestions) modSuggestions.innerHTML = "";
       if (modNewsletter) modNewsletter.innerHTML = "";
       if (modItineraries) modItineraries.innerHTML = "";
+      if (modPhotoFocus) modPhotoFocus.innerHTML = "";
       itinState = {};
+      photoFocusOverrides = {};
     }
 
     function startModListeners() {
@@ -254,6 +270,24 @@
               return new Date(b.data.createdAt) - new Date(a.data.createdAt);
             });
             renderModNewsletter(rows);
+          },
+          function () {}
+        )
+      );
+
+      // Réglages de cadrage par photo — un document par fiche dans
+      // "photoFocus", une clé par nom de fichier photo. Rendu immédiat
+      // avec les réglages par défaut (fiches.json), puis mis à jour dès
+      // que les réglages en direct arrivent.
+      renderModPhotoFocus();
+      unsubs.push(
+        db.collection("photoFocus").onSnapshot(
+          function (snap) {
+            photoFocusOverrides = {};
+            snap.forEach(function (doc) {
+              photoFocusOverrides[doc.id] = doc.data() || {};
+            });
+            renderModPhotoFocus();
           },
           function () {}
         )
@@ -351,6 +385,86 @@
         })
         .join("");
     }
+
+    // Panneau "Cadrage des photos" : un menu déroulant par photo, pour
+    // chaque fiche ayant une galerie. Sans Firestore, aucune écriture
+    // n'est possible (le gate plus haut coupe court avant d'arriver ici) ;
+    // sans réglage en direct, le menu affiche le réglage par défaut écrit
+    // dans fiches.json (champ "focus", utilisé aussi par l'export PDF).
+    function renderModPhotoFocus() {
+      if (!modPhotoFocus) return;
+      if (!galleries.length) {
+        modPhotoFocus.innerHTML = '<p class="muted-note">Aucune fiche avec galerie pour l’instant.</p>';
+        return;
+      }
+      modPhotoFocus.innerHTML = galleries
+        .map(function (f) {
+          var overrides = photoFocusOverrides[f.id] || {};
+          var photosHtml = (f.gallery || [])
+            .map(function (photo) {
+              var current = Object.prototype.hasOwnProperty.call(overrides, photo.name) ? overrides[photo.name] : photo.focus || "";
+              var optionsHtml = FOCUS_OPTIONS.map(function (opt) {
+                return (
+                  '<option value="' +
+                  esc(opt.value) +
+                  '"' +
+                  (opt.value === current ? " selected" : "") +
+                  ">" +
+                  esc(opt.label) +
+                  "</option>"
+                );
+              }).join("");
+              return (
+                '<div class="photo-focus-item">' +
+                '<img src="' + esc(photo.src) + '" alt="" loading="lazy">' +
+                '<div class="grow"><div class="muted-note">' +
+                esc(photo.caption || photo.name) +
+                "</div>" +
+                '<select class="photo-focus-select" data-fiche="' +
+                esc(f.id) +
+                '" data-photo="' +
+                esc(photo.name) +
+                '">' +
+                optionsHtml +
+                "</select></div></div>"
+              );
+            })
+            .join("");
+          return (
+            '<div class="mod-item photo-focus-fiche" style="display:block;"><div><b>' +
+            esc(f.title) +
+            "</b></div>" +
+            '<div class="photo-focus-grid">' +
+            photosHtml +
+            "</div></div>"
+          );
+        })
+        .join("");
+    }
+
+    function onPhotoFocusChange(e) {
+      var sel = e.target.closest ? e.target.closest(".photo-focus-select") : null;
+      if (!sel) return;
+      var ficheId = sel.getAttribute("data-fiche");
+      var photoName = sel.getAttribute("data-photo");
+      if (!ficheId || !photoName) return;
+      var value = sel.value;
+      var ref = db.doc("photoFocus/" + ficheId);
+      if (value) {
+        var patch = {};
+        patch[photoName] = value;
+        ref.set(patch, { merge: true }).catch(function () {
+          window.alert("Le réglage de cadrage n'a pas pu être enregistré.");
+        });
+      } else if (typeof firebase !== "undefined" && firebase.firestore && firebase.firestore.FieldValue) {
+        var del = {};
+        del[photoName] = firebase.firestore.FieldValue.delete();
+        ref.set(del, { merge: true }).catch(function () {
+          window.alert("Le réglage de cadrage n'a pas pu être réinitialisé.");
+        });
+      }
+    }
+    if (modPhotoFocus) modPhotoFocus.addEventListener("change", onPhotoFocusChange);
 
     /* -------- demandes d'itinéraire : liste + édition -------- */
     var PACE_LABEL = itinCfg.paceLabels || {};

@@ -19,8 +19,8 @@
   }
 
   var REASON_MSG = {
-    no_candidates: "Aucun lieu vérifié du magazine ne correspond encore à ces critères. Essayez d'élargir les thèmes ou les régions.",
-    budget_insuffisant: "Le rythme choisi ne laisse pas assez de temps pour visiter un lieu correspondant à ces critères. Essayez un rythme plus intensif, ou réduisez la sélection.",
+    no_candidates: "Aucun des lieux sélectionnés n'a pu être inclus. Revenez en arrière et choisissez d'autres lieux, ou élargissez la distance journalière.",
+    budget_insuffisant: "Le rythme choisi ne laisse pas assez de temps pour visiter un lieu de la sélection. Essayez un rythme plus intensif, ou réduisez la sélection.",
   };
 
   // Bloc "ajout personnel" : jamais fusionné avec le plan calculé (pas de
@@ -71,6 +71,7 @@
       "Itinéraire sur " +
       plan.actualDays +
       (plan.actualDays > 1 ? " jours" : " jour") +
+      (opts.startLabel ? " · au départ de " + esc(opts.startLabel) : "") +
       " · rythme " +
       esc(plan.pace) +
       (extraNotes.length ? "<br>" + extraNotes.map(esc).join("<br>") : "") +

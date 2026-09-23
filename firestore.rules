@@ -89,5 +89,15 @@ service cloud.firestore {
                   || (request.auth != null && resource.data.uid == request.auth.uid);
       allow update, delete: if isAdmin();
     }
+
+    // photoFocus/{ficheId} — réglage de cadrage par photo (haut/centre/bas),
+    // réglable depuis /bord/ sans reconstruire le site. Un document par
+    // fiche, une clé par photo (nom de fichier) -> "haut"|"centre"|"bas".
+    // Lecture publique (chaque page fiche applique le réglage en direct),
+    // écriture réservée à la rédaction.
+    match /photoFocus/{ficheId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }

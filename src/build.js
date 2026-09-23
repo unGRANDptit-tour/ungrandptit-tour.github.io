@@ -14,6 +14,9 @@ const ROOT = __dirname;
 const SITE_ROOT = path.join(ROOT, "..");
 const DIST = path.join(SITE_ROOT, "dist");
 
+const gabarits = require("./print/gabarits");
+const engine = require("./assets/js/itinerary-engine.js");
+
 const site = JSON.parse(fs.readFileSync(path.join(ROOT, "data/site.json"), "utf8"));
 const fiches = JSON.parse(fs.readFileSync(path.join(ROOT, "data/fiches.json"), "utf8"));
 const fichesById = {};
@@ -26,6 +29,19 @@ function esc(s) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+// Réglage de cadrage par photo (même échelle que l'export PDF, voir
+// src/print/fiche-template.js) : "haut" | "centre" | "bas". Sans ce champ
+// sur la photo, on ne force rien en dur — le CSS existant garde la main
+// (pas de changement visuel pour les fiches qui n'ont jamais réglé ça).
+// Un réglage live (photoFocus/{ficheId} dans Firestore, modifiable depuis
+// /bord/) peut ensuite surcharger cette valeur par défaut au chargement
+// de la page — voir assets/js/photo-focus.js.
+const FOCUS_Y = { haut: 15, centre: 50, bas: 80 };
+function focusAttrs(photo) {
+  const base = path.basename(String((photo && photo.src) || ""));
+  const style = photo && FOCUS_Y.hasOwnProperty(photo.focus) ? ` style="object-position:center ${FOCUS_Y[photo.focus]}%"` : "";
+  return { dataAttr: base ? ` data-photo="${esc(base)}"` : "", style };
 }
 function writeFile(relPath, content) {
   const full = path.join(DIST, relPath);
@@ -113,7 +129,7 @@ function headHtml({ title, description, path: pagePath, ogImage, extraStyles }) 
 <link rel="icon" href="${esc(site.logoPath)}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Libre+Franklin:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Libre+Franklin:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css">
 ${(extraStyles || []).map((s) => `<link rel="stylesheet" href="${s}">`).join("\n")}
 ${themeInlineScript()}
@@ -353,6 +369,34 @@ function buildHome() {
       <p class="home-hero-tag">${esc(site.siteTagline)}</p>
       <p class="home-hero-intro">Des lieux insolites et du patrimoine français, repérés sur le terrain, vérifiés par la rédaction avant d'être racontés.</p>
     </div>
+    <div class="home-mission">
+      <h2 class="home-mission-title">Notre mission</h2>
+      <p>${esc(site.siteName)} aide à composer des vacances sur mesure autour de lieux insolites et du patrimoine français — art brut, curiosités, sites naturels, architecture religieuse, tout ce qui ne figure pas dans les guides habituels. Indiquez où vous comptez séjourner et jusqu'où vous êtes prêt·e à rouler chaque jour : on vous propose les lieux vérifiés à proximité, vous choisissez ceux qui vous font envie, et on en construit un séjour clé en main pour les visites — un peu de patrimoine, un peu d'insolite, un peu de tout — toujours relu par la rédaction avant d'être définitif.</p>
+      <a class="btn-primary" href="/itineraire/" style="text-decoration:none;">Composer mon séjour</a>
+    </div>
+    <div class="home-steps">
+      <div class="home-step">
+        <div class="home-step-num">1</div>
+        <div class="home-step-body">
+          <h3>Indiquez votre point de départ</h3>
+          <p>La ville ou le village où vous séjournez, et la distance que vous êtes prêt·e à parcourir chaque jour.</p>
+        </div>
+      </div>
+      <div class="home-step">
+        <div class="home-step-num">2</div>
+        <div class="home-step-body">
+          <h3>Choisissez vos lieux</h3>
+          <p>On vous propose les lieux vérifiés autour, sur la carte ; vous cochez ceux qui vous intéressent, et la rédaction glisse ses propres coups de cœur du coin.</p>
+        </div>
+      </div>
+      <div class="home-step">
+        <div class="home-step-num">3</div>
+        <div class="home-step-body">
+          <h3>Recevez votre itinéraire</h3>
+          <p>Un parcours jour par jour, temps de route compris, toujours relu par la rédaction avant d'être confirmé.</p>
+        </div>
+      </div>
+    </div>
     ${homeGalleryHtml()}
     <div class="home-hero home-hero-menu">
       <nav class="home-menu" aria-label="Navigation principale">
@@ -388,8 +432,8 @@ function buildHome() {
     </div>
     <div class="mag-grid">${grid}</div>
     <div class="itin-cta">
-      <h2>Envie d'un itinéraire sur mesure ?</h2>
-      <p>Dites-nous vos envies (thèmes, région, nombre de jours) : on vous propose un parcours réaliste construit à partir des lieux vérifiés du magazine, toujours relu par la rédaction avant confirmation.</p>
+      <h2>Prêt·e à composer votre séjour ?</h2>
+      <p>Indiquez où vous comptez séjourner et jusqu'où vous êtes prêt·e à rouler chaque jour : on s'occupe de vous proposer les lieux vérifiés autour, vous n'avez plus qu'à choisir.</p>
       <a class="btn-primary" href="/itineraire/" style="text-decoration:none;">Créer mon itinéraire</a>
     </div>
     <div class="follow-row">
@@ -490,6 +534,33 @@ function buildClassement() {
   });
 }
 
+const CAR_ICON = '<svg viewBox="0 0 24 24"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><circle cx="7.5" cy="17.5" r="1.4"/><circle cx="16.5" cy="17.5" r="1.4"/></svg>';
+const CLOCK_ICON = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>';
+
+// Mêmes distances/temps réels que l'export PDF (site/src/print/fiche-template.js) :
+// calculés une seule fois au build, jamais tapés à la main.
+function travelIconsHtml(coords, visitDurationMin) {
+  const cfg = engine.DEFAULT_CFG;
+  const cities = (coords ? site.referenceCities || [] : [])
+    .map((c) => {
+      const km = engine.haversineKm(coords, c.coords) * cfg.roadDetourFactor;
+      const min = engine.travelMinutes(engine.haversineKm(coords, c.coords), cfg);
+      return { label: c.label, km: Math.round(km), min: Math.round(min) };
+    })
+    .sort((a, b) => a.km - b.km)
+    .slice(0, 3);
+  const items = cities
+    .map(
+      (t) =>
+        `<div class="item">${CAR_ICON}<span class="val">~${engine.formatDuration(t.min)}</span><span class="lbl">${esc(t.label)} · ${t.km} km</span></div>`
+    )
+    .join("");
+  const visit = visitDurationMin
+    ? `<div class="item">${CLOCK_ICON}<span class="val">~${engine.formatDuration(visitDurationMin)}</span><span class="lbl">Durée de visite</span></div>`
+    : "";
+  return items || visit ? `<div class="travel-icons">${items}${visit}</div>` : "";
+}
+
 function buildFiche(f) {
   const tags = f.themes.map(themeTag).join("") + (f.region !== "a_confirmer" ? regionTag(f.region) : "");
   const heroStyle = f.image ? ` style="background-image:url('${esc(f.image)}')"` : "";
@@ -497,26 +568,79 @@ function buildFiche(f) {
     ? ""
     : `<svg viewBox="0 0 24 24" style="position:absolute;right:14px;top:14px;width:56px;height:56px;opacity:.5;fill:none;stroke-width:1.2;stroke:var(--${(THEMES[f.themes[0]] || {}).varName || "forest"})">${THEME_ICONS[f.themes[0]] || THEME_ICONS.patrimoine}</svg>`;
   const photoCredit = f.image && f.imageCredit ? `<span class="photo-credit">Photo ${esc(f.imageCredit)}</span>` : "";
+  // Bandeau de thèmes tracé en surimpression sur la photo, façon couverture
+  // de magazine (même device que le carnet imprimé) — le thème actif de la
+  // fiche ressort en gras/blanc.
+  const themestripHtml = `<div class="detail-themestrip">${Object.keys(THEMES)
+    .map((k) => {
+      const word = k.charAt(0).toUpperCase() + k.slice(1);
+      return f.themes.includes(k) ? `<strong>${esc(word)}</strong>` : esc(word);
+    })
+    .join(" · ")} — Le Mag</div>`;
+  const eyebrowLabel = (THEMES[f.themes[0]] || {}).label || site.siteName;
+  const locationLine = f.region !== "a_confirmer" ? regionLabel(f.region) : "";
   const draftNote =
     f.status === "brouillon"
       ? `<div class="draft-note">Cette fiche n'est pas encore publiée officiellement : elle attend confirmation des faits par la rédaction (lieu, source, date).</div>`
       : "";
   const coordRow = f.coords
-    ? `<div class="coord-row"><span>lon ${f.coords.lon}</span><span>lat ${f.coords.lat}</span></div>`
+    ? `<a class="coord-link" href="https://www.openstreetmap.org/?mlat=${f.coords.lat}&amp;mlon=${f.coords.lon}#map=15/${f.coords.lat}/${f.coords.lon}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M12 21s7-7.5 7-12a7 7 0 0 0-14 0c0 4.5 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        <span>Voir sur la carte<span class="coord-value">${f.coords.lat}, ${f.coords.lon}</span></span>
+      </a>`
     : "";
   const practical = f.practical
     ? `<div class="block">
         <h2>Carnet pratique</h2>
-        <dl style="margin:0;">
+        <div class="practical-grid">
           ${Object.entries(f.practical)
-            .map(([k, v]) => `<dt style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-top:8px;">${esc(k)}</dt><dd style="margin:2px 0 0;font-size:13.5px;">${esc(v)}</dd>`)
+            .map(([k, v]) => `<div class="practical-item"><div class="practical-label">${esc(k)}</div><div class="practical-value">${esc(v)}</div></div>`)
             .join("")}
-        </dl>
+        </div>
       </div>`
     : "";
-  const gallery = (f.gallery || [])
-    .map((g) => `<figure style="margin:0 0 14px;"><img src="${esc(g.src)}" alt="${esc(g.caption || "")}" style="width:100%;border-radius:12px;display:block;"><figcaption style="font-size:11.5px;color:var(--ink-faint);margin-top:6px;">${esc(g.caption || "")}</figcaption></figure>`)
-    .join("\n");
+  // Citation mise en avant (optionnelle, par fiche) : coupe le texte en deux,
+  // à la manière d'une "pull quote" de magazine. Renseignée via fiches.json → "highlight".
+  const bodyParas = f.body || [];
+  const bodyHtml =
+    f.highlight && bodyParas.length > 1
+      ? `<p>${esc(bodyParas[0])}</p><blockquote class="fiche-pullquote">${esc(f.highlight)}</blockquote>${bodyParas
+          .slice(1)
+          .map((p) => `<p>${esc(p)}</p>`)
+          .join("")}`
+      : bodyParas.map((p) => `<p>${esc(p)}</p>`).join("");
+  // Gabarits de galerie — même moteur que l'export PDF (src/print/gabarits.js) :
+  // l'ordre des photos dans la fiche pilote leur emplacement, pour une vraie
+  // variété de tailles au lieu d'un simple empilement de photos identiques.
+  const gab = gabarits.assignGallery(f.gallery, gabarits.FULL_SLOTS);
+  const fig = (photo, extraClass) => {
+    if (!photo) return "";
+    const { dataAttr, style } = focusAttrs(photo);
+    return `<figure${dataAttr}><img src="${esc(photo.src)}" alt="${esc(photo.caption || "")}" loading="lazy"${style}>${
+      photo.caption ? `<figcaption>${esc(photo.caption)}</figcaption>` : ""
+    }</figure>`;
+  };
+  const galleryBlocks = [];
+  if (gab.bandeau_duo) {
+    galleryBlocks.push(`<div class="gallery-duo">${gab.bandeau_duo.map((p) => fig(p)).join("")}</div>`);
+  }
+  if (gab.grand_simple) galleryBlocks.push(`<div class="gallery-tall">${fig(gab.grand_simple[0])}</div>`);
+  if (gab.grand_large) galleryBlocks.push(`<div class="gallery-wide">${fig(gab.grand_large[0])}</div>`);
+  if (gab.insert_petit) galleryBlocks.push(`<div class="gallery-small">${fig(gab.insert_petit[0])}</div>`);
+  if (gab.bande_detail) galleryBlocks.push(`<div class="gallery-wide">${fig(gab.bande_detail[0])}</div>`);
+  (gab.trio || []).forEach((trio) => {
+    galleryBlocks.push(
+      `<div class="gallery-trio">${trio.map((p, i) => `<div class="t${i + 1}">${fig(p)}</div>`).join("")}</div>`
+    );
+  });
+  const gallery = galleryBlocks.length ? `<div class="gallery-block">${galleryBlocks.join("")}</div>` : "";
+  const verdictHtml = f.verdict
+    ? `<div class="fiche-verdict">
+        <div class="kicker">L'avis de la rédaction</div>
+        <p>${esc(f.verdict)}</p>
+        <div class="sig">— La rédaction de ${esc(site.siteName)}</div>
+      </div>`
+    : "";
   const sources = (f.sources || []).map((s) => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)} ↗</a></li>`).join("");
 
   const content = `<section class="view detail">
@@ -525,20 +649,27 @@ function buildFiche(f) {
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M15 5 8 12l7 7"/></svg>
       </a>
       ${heroIcon}
+      ${themestripHtml}
+      <div class="detail-titlewrap">
+        <span class="detail-eyebrow">${esc(eyebrowLabel)}</span>
+        <h1>${esc(f.title)}</h1>
+        ${locationLine ? `<div class="detail-location">${esc(locationLine)}</div>` : ""}
+      </div>
       ${photoCredit}
     </div>
     <div class="detail-body">
       <div>${statusBadge(f.status, "full")}</div>
-      <h1>${esc(f.title)}</h1>
       <div class="detail-tags">${tags}</div>
       <p class="detail-summary">${esc(f.summary)}</p>
       <a class="account-credit" href="${esc(site.instagramUrl)}" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg>
         Un lieu du compte ${esc(site.instagramHandle)}
       </a>
+      ${travelIconsHtml(f.coords, f.visitDurationMin)}
       ${draftNote}
-      <div class="detail-text">${f.body.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
+      <div class="detail-text">${bodyHtml}</div>
       ${gallery}
+      ${verdictHtml}
       ${coordRow}
       ${sources ? `<ul class="sources">${sources}</ul>` : ""}
     </div>
@@ -586,7 +717,7 @@ function buildFiche(f) {
     ogImage: f.image,
     active: null,
     content,
-    extraScripts: ["/assets/js/votes.js", "/assets/js/comments.js", "/assets/js/reco.js"],
+    extraScripts: ["/assets/js/votes.js", "/assets/js/comments.js", "/assets/js/reco.js", "/assets/js/photo-focus.js"],
   });
 }
 
@@ -652,35 +783,40 @@ function buildItineraire() {
       coords: f.coords,
       visitDurationMin: f.visitDurationMin || ITIN.defaultVisitDurationMin,
       image: f.image || null,
+      redactionPick: !!f.redactionPick,
       url: ficheUrl(f),
     }));
+  const themeLabels = Object.keys(THEMES).reduce((acc, k) => {
+    acc[k] = THEMES[k].label;
+    return acc;
+  }, {});
 
   const content = `<section class="view">
     <div class="section-head">
       <h1>Créer mon itinéraire</h1>
-      <p>Un parcours construit uniquement à partir des lieux vérifiés du magazine — jamais inventé — puis relu par la rédaction avant d'être définitif.</p>
+      <p>Indiquez où vous comptez séjourner, on vous propose les lieux vérifiés du magazine autour — vous choisissez ceux qui vous intéressent, la rédaction relit avant que ce soit définitif.</p>
     </div>
-    <form class="form-wrap" id="itinForm">
+
+    <form class="form-wrap" id="itinStep1">
+      <div class="field">
+        <label for="it-place">Où comptez-vous séjourner ? <span class="hint">(ville, village, adresse…)</span></label>
+        <div class="autocomplete-wrap">
+          <input id="it-place" type="text" autocomplete="off" placeholder="Ex. Bourges, Cher…" required>
+          <div id="it-place-suggestions" class="autocomplete-list" hidden></div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="it-radius">Distance que vous êtes prêt·e à parcourir par jour</label>
+        <select id="it-radius">
+          <option value="20">Jusqu'à 20 km</option>
+          <option value="50" selected>Jusqu'à 50 km</option>
+          <option value="100">Jusqu'à 100 km</option>
+          <option value="150">Jusqu'à 150 km</option>
+        </select>
+      </div>
       <div class="field">
         <label for="it-days">Nombre de jours</label>
         <input id="it-days" type="number" min="1" max="${ITIN.maxDaysRequestable}" value="2" required>
-      </div>
-      <div class="field">
-        <label>Thèmes <span class="hint">(optionnel — laissez vide pour tous)</span></label>
-        <div class="itin-toggle-row" id="it-themes">
-          ${Object.keys(THEMES)
-            .map((k) => `<button type="button" class="itin-toggle" data-value="${k}">${esc(THEMES[k].label)}</button>`)
-            .join("")}
-        </div>
-      </div>
-      <div class="field">
-        <label>Régions <span class="hint">(optionnel — laissez vide pour toutes)</span></label>
-        <div class="itin-toggle-row" id="it-regions">
-          ${Object.keys(REGIONS)
-            .filter((k) => k !== "a_confirmer")
-            .map((k) => `<button type="button" class="itin-toggle" data-value="${k}">${esc(regionLabel(k))}</button>`)
-            .join("")}
-        </div>
       </div>
       <div class="field">
         <label for="it-pace">Rythme</label>
@@ -690,33 +826,62 @@ function buildItineraire() {
             .join("")}
         </select>
       </div>
-      <div class="field">
-        <label for="it-place-request">Un lieu en particulier que vous aimeriez inclure et qu'on n'a pas encore ? <span class="hint">(optionnel)</span></label>
-        <textarea id="it-place-request" rows="2" maxlength="300" placeholder="Nom du lieu, ville, pourquoi vous y tenez…"></textarea>
-        <p class="hint" style="margin-top:2px;">Il apparaîtra dans votre itinéraire, signalé comme votre propre ajout — pas un conseil de la rédaction, qui n'a pas encore vérifié ce lieu.</p>
-      </div>
-      <div class="field">
-        <label for="it-email">Votre email <span class="hint">(optionnel, pour être prévenu·e une fois l'itinéraire validé)</span></label>
-        <input id="it-email" type="email">
-      </div>
-      <button class="btn-primary" id="it-submit" type="submit">Générer mon itinéraire</button>
-      <p class="muted-note" id="it-note" style="margin-top:10px;"></p>
+      <button class="btn-primary" id="it-step1-submit" type="submit" disabled>Voir les lieux autour de ce point</button>
+      <p class="hint" style="margin-top:6px;">Choisissez un lieu dans la liste qui apparaît sous le champ — c'est lui qui sert de point de départ.</p>
     </form>
+
+    <div id="itinStep2" hidden>
+      <div class="section-head">
+        <h2>Choisissez vos lieux</h2>
+        <p class="muted-note" id="it-step2-sub" style="padding:0 16px;"></p>
+      </div>
+      <div id="itinMap" class="real-map compact"></div>
+      <div id="itinProposals" class="itin-proposal-list"></div>
+      <div id="itinRecoBlock" hidden>
+        <div class="section-head" style="margin-top:10px;">
+          <h2>La rédaction recommande aussi</h2>
+          <p>Des coups de cœur du magazine un peu plus loin, que vous n'avez pas vus dans les propositions ci-dessus — un clic pour les ajouter.</p>
+        </div>
+        <div id="itinReco" class="itin-proposal-list"></div>
+      </div>
+      <div class="form-wrap" style="padding-top:16px;">
+        <div class="field">
+          <label for="it-place-request">Un lieu en particulier que vous aimeriez inclure et qu'on n'a pas encore ? <span class="hint">(optionnel)</span></label>
+          <textarea id="it-place-request" rows="2" maxlength="300" placeholder="Nom du lieu, ville, pourquoi vous y tenez…"></textarea>
+          <p class="hint" style="margin-top:2px;">Il apparaîtra dans votre itinéraire, signalé comme votre propre ajout — pas un conseil de la rédaction, qui n'a pas encore vérifié ce lieu.</p>
+        </div>
+        <div class="field">
+          <label for="it-email">Votre email <span class="hint">(optionnel, pour être prévenu·e une fois l'itinéraire validé)</span></label>
+          <input id="it-email" type="email">
+        </div>
+        <button class="btn-primary" id="it-generate" type="button">Générer mon itinéraire</button>
+        <button class="btn-secondary" id="it-back" type="button" style="margin-left:8px;">‹ Changer le point de départ</button>
+        <p class="muted-note" id="it-note" style="margin-top:10px;"></p>
+      </div>
+    </div>
+
     <div id="itineraryResult"></div>
     ${footerHtml()}
   </section>
   <script>
     window.__FICHES_FOR_ITINERARY__ = ${JSON.stringify(verifiedForItin)};
     window.__UGPT_ITINERARY_CFG__ = ${JSON.stringify(ITIN)};
+    window.__UGPT_THEME_LABELS__ = ${JSON.stringify(themeLabels)};
   </script>`;
 
   return page({
     title: "Créer mon itinéraire",
-    description: "Générez un itinéraire de voyage réaliste à partir des lieux vérifiés du magazine, relu par la rédaction avant confirmation.",
+    description: "Indiquez où vous séjournez : on vous propose les lieux vérifiés du magazine autour, vous choisissez, la rédaction relit avant confirmation.",
     path: "/itineraire/",
     active: null,
     content,
-    extraScripts: ["/assets/js/itinerary-engine.js", "/assets/js/itinerary-render.js", "/assets/js/itinerary.js"],
+    extraScripts: [
+      "/assets/js/itinerary-engine.js",
+      "/assets/js/itinerary-render.js",
+      "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+      "/assets/js/itinerary.js",
+    ],
+    extraStyles: ["https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"],
   });
 }
 
@@ -785,6 +950,9 @@ function buildBord() {
       <div id="modSuggestions"></div>
       <div class="eyebrow" style="margin-top:14px;">Inscriptions newsletter</div>
       <div id="modNewsletter"></div>
+      <div class="eyebrow" style="margin-top:14px;">Cadrage des photos</div>
+      <p class="muted-note" style="margin-bottom:10px;">Règle le recadrage vertical d'une photo précise dans une fiche (utile quand la photo montre un sujet vertical, comme une tour ou un totem, et que le cadrage automatique n'est pas le bon). S'applique tout de suite sur le site, sans reconstruction.</p>
+      <div id="modPhotoFocus"></div>
       <div class="stop-panel">
         <div class="eyebrow" style="margin-bottom:8px;">Bouton d'arrêt d'urgence</div>
         <p class="muted-note" style="margin-bottom:10px;">Suspend immédiatement les votes, commentaires et le formulaire de proposition pour tous les visiteurs — les fiches restent lisibles. À utiliser en cas de modération débordée, de contenu problématique ou de besoin légal.</p>
@@ -813,6 +981,18 @@ function buildBord() {
         }))
     )};
     window.__UGPT_ITINERARY_CFG__ = ${JSON.stringify(site.itinerary)};
+    window.__FICHES_GALLERIES__ = ${JSON.stringify(
+      fiches.map((f) => ({
+        id: f.id,
+        title: f.title,
+        gallery: (f.gallery || []).map((p) => ({
+          src: p.src,
+          name: path.basename(p.src),
+          caption: p.caption || "",
+          focus: p.focus || "",
+        })),
+      })).filter((f) => f.gallery.length)
+    )};
   </script>`;
   return page({
     title: "Tableau de bord",
