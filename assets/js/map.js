@@ -47,7 +47,7 @@
     marker.on("click", function () {
       marker.openPopup();
     });
-    entries.push({ marker: marker, region: f.region, country: f.country, latlng: [f.coords.lat, f.coords.lon] });
+    entries.push({ marker: marker, region: f.region, departement: f.departement, country: f.country, latlng: [f.coords.lat, f.coords.lon] });
   });
 
   function fitTo(list) {
@@ -66,14 +66,15 @@
   // Le filtre pays (#mapCountryChips) n'existe dans la page que si un deuxième
   // pays a été ajouté à site.json — tant que seule la France est présente,
   // filterState.country reste "tous" en permanence et ce bloc est inerte.
-  var filterState = { country: "tous", region: "tous" };
+  var filterState = { country: "tous", region: "tous", departement: "tous" };
 
   function applyMapFilter() {
     var visible = [];
     entries.forEach(function (e) {
       var countryOk = filterState.country === "tous" || e.country === filterState.country;
       var regionOk = filterState.region === "tous" || e.region === filterState.region;
-      var show = countryOk && regionOk;
+      var deptOk = filterState.departement === "tous" || e.departement === filterState.departement;
+      var show = countryOk && regionOk && deptOk;
       if (show) {
         if (!map.hasLayer(e.marker)) e.marker.addTo(map);
         visible.push(e);
@@ -100,6 +101,14 @@
     });
   }
 
-  wireChips(document.getElementById("mapRegionChips"), "region");
   wireChips(document.getElementById("mapCountryChips"), "country");
+
+  var regionDeptGroup = document.querySelector('.region-dept-filter[data-filter-group="mapRegionChips"]');
+  if (regionDeptGroup) {
+    regionDeptGroup.addEventListener("rdfilter", function (e) {
+      filterState.region = e.detail.region;
+      filterState.departement = e.detail.departement;
+      applyMapFilter();
+    });
+  }
 })();

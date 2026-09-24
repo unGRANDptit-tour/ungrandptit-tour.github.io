@@ -31,6 +31,13 @@
       <img class="brand-logo" src="/assets/img/logo.jpg" alt="">
       <span class="masthead">Un Grand P'tit Tour</span>
     </a>
+    <nav class="topbar-nav" aria-label="Navigation">
+    <a href="/">Accueil</a>
+    <a href="/carte/" class="active" aria-current="page">Carte</a>
+    <a href="/classement/">Classement</a>
+    <a href="/contribuer/">Contribuer</a>
+    <a href="/bord/">Bord</a>
+  </nav>
     <div class="topbar-actions">
       <a class="topbar-cta" href="/itineraire/">Composer</a>
       <button class="icon-btn" id="themeToggleBtn" title="Apparence" aria-label="Changer l'apparence" type="button"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7"/></svg></button>
@@ -43,22 +50,34 @@
   <main class="views">
     <section class="view map-view">
     
-    <div class="chip-row" id="mapRegionChips">
-    <button type="button" class="chip active" data-region="tous">Toutes les régions</button>
-    <button type="button" class="chip" data-region="aura">Auvergne-Rhône-Alpes</button>
-    <button type="button" class="chip" data-region="bfc">Bourgogne-Franche-Comté</button>
-    <button type="button" class="chip" data-region="bretagne">Bretagne</button>
-    <button type="button" class="chip" data-region="cvl">Centre-Val de Loire</button>
-    <button type="button" class="chip" data-region="corse">Corse</button>
-    <button type="button" class="chip" data-region="grand_est">Grand Est</button>
-    <button type="button" class="chip" data-region="hdf">Hauts-de-France</button>
-    <button type="button" class="chip" data-region="idf">Île-de-France</button>
-    <button type="button" class="chip" data-region="normandie">Normandie</button>
-    <button type="button" class="chip" data-region="naquitaine">Nouvelle-Aquitaine</button>
-    <button type="button" class="chip" data-region="occitanie">Occitanie</button>
-    <button type="button" class="chip" data-region="pdl">Pays de la Loire</button>
-    <button type="button" class="chip" data-region="paca">Provence-Alpes-Côte d'Azur</button>
+    <div class="region-dept-filter" data-filter-group="mapRegionChips">
+    <div class="rd-field">
+      <label for="mapRegionChipsRegion">Région</label>
+      <select id="mapRegionChipsRegion" class="rd-select" data-role="region">
+        <option value="tous">Toutes les régions</option>
+        <option value="aura">Auvergne-Rhône-Alpes</option>
+        <option value="bfc">Bourgogne-Franche-Comté</option>
+        <option value="bretagne">Bretagne</option>
+        <option value="cvl">Centre-Val de Loire</option>
+        <option value="corse">Corse</option>
+        <option value="grand_est">Grand Est</option>
+        <option value="hdf">Hauts-de-France</option>
+        <option value="idf">Île-de-France</option>
+        <option value="normandie">Normandie</option>
+        <option value="naquitaine">Nouvelle-Aquitaine</option>
+        <option value="occitanie">Occitanie</option>
+        <option value="pdl">Pays de la Loire</option>
+        <option value="paca">Provence-Alpes-Côte d'Azur</option>
+      </select>
+    </div>
+    <div class="rd-field">
+      <label for="mapRegionChipsDept">Département</label>
+      <select id="mapRegionChipsDept" class="rd-select" data-role="departement" disabled>
+        <option value="tous">Tous les départements</option>
+      </select>
+    </div>
   </div>
+  <script>window.__DEPT_BY_REGION__ = window.__DEPT_BY_REGION__ || {"grand_est":[{"code":"08","name":"Ardennes"},{"code":"10","name":"Aube"},{"code":"67","name":"Bas-Rhin"},{"code":"68","name":"Haut-Rhin"},{"code":"52","name":"Haute-Marne"},{"code":"51","name":"Marne"},{"code":"54","name":"Meurthe-et-Moselle"},{"code":"55","name":"Meuse"},{"code":"57","name":"Moselle"},{"code":"88","name":"Vosges"}],"occitanie":[{"code":"09","name":"Ariège"},{"code":"11","name":"Aude"},{"code":"12","name":"Aveyron"},{"code":"30","name":"Gard"},{"code":"32","name":"Gers"},{"code":"31","name":"Haute-Garonne"},{"code":"65","name":"Hautes-Pyrénées"},{"code":"34","name":"Hérault"},{"code":"46","name":"Lot"},{"code":"48","name":"Lozère"},{"code":"66","name":"Pyrénées-Orientales"},{"code":"81","name":"Tarn"},{"code":"82","name":"Tarn-et-Garonne"}],"paca":[{"code":"04","name":"Alpes-de-Haute-Provence"},{"code":"06","name":"Alpes-Maritimes"},{"code":"13","name":"Bouches-du-Rhône"},{"code":"05","name":"Hautes-Alpes"},{"code":"83","name":"Var"},{"code":"84","name":"Vaucluse"}],"normandie":[{"code":"14","name":"Calvados"},{"code":"27","name":"Eure"},{"code":"50","name":"Manche"},{"code":"61","name":"Orne"},{"code":"76","name":"Seine-Maritime"}],"aura":[{"code":"01","name":"Ain"},{"code":"03","name":"Allier"},{"code":"07","name":"Ardèche"},{"code":"15","name":"Cantal"},{"code":"26","name":"Drôme"},{"code":"43","name":"Haute-Loire"},{"code":"74","name":"Haute-Savoie"},{"code":"38","name":"Isère"},{"code":"42","name":"Loire"},{"code":"63","name":"Puy-de-Dôme"},{"code":"69","name":"Rhône"},{"code":"73","name":"Savoie"}],"naquitaine":[{"code":"16","name":"Charente"},{"code":"17","name":"Charente-Maritime"},{"code":"19","name":"Corrèze"},{"code":"23","name":"Creuse"},{"code":"79","name":"Deux-Sèvres"},{"code":"24","name":"Dordogne"},{"code":"33","name":"Gironde"},{"code":"87","name":"Haute-Vienne"},{"code":"40","name":"Landes"},{"code":"47","name":"Lot-et-Garonne"},{"code":"64","name":"Pyrénées-Atlantiques"},{"code":"86","name":"Vienne"}],"cvl":[{"code":"18","name":"Cher"},{"code":"28","name":"Eure-et-Loir"},{"code":"36","name":"Indre"},{"code":"37","name":"Indre-et-Loire"},{"code":"41","name":"Loir-et-Cher"},{"code":"45","name":"Loiret"}],"bfc":[{"code":"21","name":"Côte-d'Or"},{"code":"25","name":"Doubs"},{"code":"70","name":"Haute-Saône"},{"code":"39","name":"Jura"},{"code":"58","name":"Nièvre"},{"code":"71","name":"Saône-et-Loire"},{"code":"90","name":"Territoire de Belfort"},{"code":"89","name":"Yonne"}],"bretagne":[{"code":"22","name":"Côtes-d'Armor"},{"code":"29","name":"Finistère"},{"code":"35","name":"Ille-et-Vilaine"},{"code":"56","name":"Morbihan"}],"pdl":[{"code":"44","name":"Loire-Atlantique"},{"code":"49","name":"Maine-et-Loire"},{"code":"53","name":"Mayenne"},{"code":"72","name":"Sarthe"},{"code":"85","name":"Vendée"}],"hdf":[{"code":"02","name":"Aisne"},{"code":"59","name":"Nord"},{"code":"60","name":"Oise"},{"code":"62","name":"Pas-de-Calais"},{"code":"80","name":"Somme"}],"idf":[{"code":"91","name":"Essonne"},{"code":"92","name":"Hauts-de-Seine"},{"code":"75","name":"Paris"},{"code":"77","name":"Seine-et-Marne"},{"code":"93","name":"Seine-Saint-Denis"},{"code":"95","name":"Val-d'Oise"},{"code":"94","name":"Val-de-Marne"},{"code":"78","name":"Yvelines"}],"corse":[{"code":"2A","name":"Corse-du-Sud"},{"code":"2B","name":"Haute-Corse"}]};</script>
     <div id="mapEl" class="real-map"></div>
     <div class="map-legend" id="mapLegend">
       <span><span class="dot" style="background:var(--forest)"></span>Patrimoine &amp; architecture</span><span><span class="dot" style="background:var(--ochre)"></span>Chemins spirituels</span><span><span class="dot" style="background:var(--trail)"></span>Insolite &amp; extraordinaire</span><span><span class="dot" style="background:var(--water)"></span>Nature &amp; paysages</span>
@@ -67,7 +86,7 @@
       <h1>Autour de la carte</h1>
       <p>Touchez un repère pour ouvrir la fiche du lieu.</p>
     </div>
-    <div class="fiche-list"><a class="fiche-card" href="/fiches/maison-couleur-du-temps/" data-themes="insolite" data-region="aura" data-country="france" data-sub="art_brut">
+    <div class="fiche-list"><a class="fiche-card" href="/fiches/maison-couleur-du-temps/" data-themes="insolite" data-region="aura" data-departement="03" data-country="france" data-sub="art_brut">
     
     <div class="card-glyph theme-insolite"><img src="/assets/img/fiches/maison-couleur-du-temps-hero.jpg" alt="" loading="lazy"></div>
     <div class="card-body">
@@ -77,7 +96,7 @@
     </div>
     <span class="card-votes" data-vote-count="maison-couleur-du-temps"><svg viewBox="0 0 24 24"><path d="M12 20.5s-7.8-4.7-10.2-9.4C.4 8 1.7 4.7 4.9 3.7c2-.6 4 .1 5.3 1.8.4.5 1 .5 1.4 0 1.3-1.7 3.3-2.4 5.3-1.8 3.2 1 4.5 4.3 3.1 7.4-2.4 4.7-10.2 9.4-10.2 9.4Z"/></svg><span class="vote-num">0</span></span>
   </a>
-<a class="fiche-card" href="/fiches/cathedrale-de-jean-linard/" data-themes="insolite" data-region="cvl" data-country="france" data-sub="art_brut">
+<a class="fiche-card" href="/fiches/cathedrale-de-jean-linard/" data-themes="insolite" data-region="cvl" data-departement="18" data-country="france" data-sub="art_brut">
     
     <div class="card-glyph theme-insolite"><img src="/assets/img/fiches/cathedrale-de-jean-linard-guerre.jpg" alt="" loading="lazy"></div>
     <div class="card-body">
@@ -98,7 +117,7 @@
     <div class="foot-bottom"><span>© 2026 Un Grand P'tit Tour — photos @un_grand_ptit_tour</span><span class="mono">Le guide</span></div>
   </footer>
   </section>
-  <script>window.__FICHES_MAP__ = [{"id":"maison-couleur-du-temps","title":"La Maison Couleur du Temps","summary":"Une grange ordinaire devenue, fresque après fresque, l'œuvre d'une vie entière.","coords":{"lon":2.765,"lat":46.4775},"theme":"insolite","region":"aura","country":"france","url":"/fiches/maison-couleur-du-temps/"},{"id":"cathedrale-de-jean-linard","title":"La Cathédrale de Jean Linard","summary":"Une ancienne carrière de silex devenue, pendant trente ans, une cathédrale à ciel ouvert couverte de mosaïques.","coords":{"lon":2.7,"lat":47.2789},"theme":"insolite","region":"cvl","country":"france","url":"/fiches/cathedrale-de-jean-linard/"}];</script>
+  <script>window.__FICHES_MAP__ = [{"id":"maison-couleur-du-temps","title":"La Maison Couleur du Temps","summary":"Une grange ordinaire devenue, fresque après fresque, l'œuvre d'une vie entière.","coords":{"lon":2.765,"lat":46.4775},"theme":"insolite","region":"aura","departement":"03","country":"france","url":"/fiches/maison-couleur-du-temps/"},{"id":"cathedrale-de-jean-linard","title":"La Cathédrale de Jean Linard","summary":"Une ancienne carrière de silex devenue, pendant trente ans, une cathédrale à ciel ouvert couverte de mosaïques.","coords":{"lon":2.7,"lat":47.2789},"theme":"insolite","region":"cvl","departement":"18","country":"france","url":"/fiches/cathedrale-de-jean-linard/"}];</script>
   </main>
   <nav class="tabbar" aria-label="Navigation">
     <a class="tab-btn" href="/">
@@ -142,6 +161,7 @@
 <script defer src="/assets/js/analytics.js"></script>
 <script defer src="/assets/js/cookies.js"></script>
 <script defer src="/assets/js/votes.js"></script>
+<script defer src="/assets/js/region-dept-filter.js"></script>
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script defer src="/assets/js/map.js"></script>
 </body>
