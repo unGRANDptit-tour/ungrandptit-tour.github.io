@@ -90,13 +90,46 @@ function glyphSvg(themeKey) {
   const varName = (THEMES[themeKey] || {}).varName || "forest";
   return `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" style="stroke:var(--${varName})">${paths}</svg>`;
 }
-// Statut d'une fiche, dans la langue de la charte « Signature » :
-// « Vérifié sur place » (bleu) ou « En cours de vérification » (ambre).
-function statusBadge(status, size) {
+// Statut d'une fiche, dans la langue de la charte « Signature ». Trois états :
+// « verifie » (bleu, entre dans les itinéraires), « reserve » (sarcelle, entre
+// aussi dans les itinéraires mais garde une réserve visible sur des détails
+// pratiques), et tout le reste = brouillon (ambre, écarté des itinéraires).
+function statusInfo(status) {
   if (status === "verifie") {
-    return `<span class="badge verified"><i></i>${size === "full" ? "Vérifié sur place par la rédaction" : "Vérifié sur place"}</span>`;
+    return {
+      key: "verifie",
+      itineraryReady: true,
+      badgeClass: "verified",
+      heroClass: "ok",
+      label: "Vérifié sur place",
+      labelFull: "Vérifié sur place par la rédaction",
+    };
   }
-  return `<span class="badge draft"><i></i>En cours de vérification</span>`;
+  if (status === "reserve") {
+    return {
+      key: "reserve",
+      itineraryReady: true,
+      badgeClass: "reserve",
+      heroClass: "reserve",
+      label: "Vérifié — détails à confirmer",
+      labelFull: "Vérifié sur place — quelques détails à confirmer",
+    };
+  }
+  return {
+    key: "brouillon",
+    itineraryReady: false,
+    badgeClass: "draft",
+    heroClass: "draft",
+    label: "En cours de vérification",
+    labelFull: "En cours de vérification",
+  };
+}
+function isItineraryReady(f) {
+  return statusInfo(f.status).itineraryReady;
+}
+function statusBadge(status, size) {
+  const info = statusInfo(status);
+  return `<span class="badge ${info.badgeClass}"><i></i>${size === "full" ? info.labelFull : info.label}</span>`;
 }
 
 function ficheUrl(f) {
@@ -339,9 +372,14 @@ function nearestCities(coords, n) {
 }
 
 // Lieu mis en avant (« coup de cœur ») : la première fiche marquée redactionPick,
-// sinon la première fiche vérifiée, sinon la première fiche.
+// sinon la première fiche vérifiée, sinon une fiche vérifiée avec réserves, sinon la première fiche.
 function pickFiche() {
-  return fiches.find((f) => f.redactionPick) || fiches.find((f) => f.status === "verifie") || fiches[0];
+  return (
+    fiches.find((f) => f.redactionPick) ||
+    fiches.find((f) => f.status === "verifie") ||
+    fiches.find((f) => f.status === "reserve") ||
+    fiches[0]
+  );
 }
 
 function arrowSvg() {
@@ -434,7 +472,7 @@ function buildHome() {
   );
   const pick = pickFiche();
   const maxDays = (site.itinerary && site.itinerary.maxDaysRequestable) || 7;
-  const verifiedCount = fiches.filter((f) => f.status === "verifie").length;
+  const verifiedCount = fiches.filter((f) => isItineraryReady(f)).length;
   const themeCount = Object.keys(THEMES).length;
 
   const topper = [pick ? `<a class="now" href="${ficheUrl(pick)}">Coup de cœur du moment</a>` : ""]
@@ -457,7 +495,7 @@ function buildHome() {
         ${pick.highlight ? `<blockquote>« ${esc(pick.highlight)} »</blockquote>` : ""}
         <p>${esc(pick.summary)}</p>
         <div class="meta-row">
-          <span class="m mono">${pick.status === "verifie" ? "Vérifié" : "En cours de vérification"}${
+          <span class="m mono">${statusInfo(pick.status).label}${
             pick.visitDurationMin ? ` · visite ${engine.formatDuration(pick.visitDurationMin)}` : ""
           }</span>
           <a href="${ficheUrl(pick)}">Lire la fiche →</a>
@@ -487,7 +525,7 @@ function buildHome() {
         <input id="hs-lieu" name="lieu" placeholder="Ex. Bourges, Cher…" autocomplete="off">
       </div>
       <div class="s-row2">
-        <div class="s-f"><label for="hs-km">Distance / jour</label><select id="hs-km" name="km"><option value="20">20 km</option><option value="50" selected>50 km</option><option value="100">100 km</option><option value="150">150 km</option></select></div>
+        <div class="s-f"><label for="hs-km">Distance / jour</label><select id="hs-km" name="km"><option value="20">20 km</option><option value="50" selected>50 km</option><option value="100">100 km</option><option value="150">150 km</option><option value="250">250 km</option></select></div>
         <div class="s-f"><label for="hs-jours">Durée</label><select id="hs-jours" name="jours">${dayOptions}</select></div>
         <button class="s-btn" type="submit">Composer</button>
       </div>
@@ -593,7 +631,7 @@ function buildClassement() {
   const themeChips = ["tous"].concat(Object.keys(THEMES));
   const regionChips = ["tous"].concat(Object.keys(REGIONS).filter((k) => k !== "a_confirmer"));
   const cards = fiches
-    .filter((f) => f.status === "verifie")
+    .filter((f) => isItineraryReady(f))
     .map((f, i) => ficheCardHtml(f, { rank: i + 1 }))
     .join("\n");
   const content = `<section class="view">
@@ -639,7 +677,8 @@ const PIN_ICON = '<svg viewBox="0 0 24 24"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0
 
 function buildFiche(f) {
   const year = new Date().getFullYear();
-  const verified = f.status === "verifie";
+  const info = statusInfo(f.status);
+  const verified = info.key === "verifie";
   const theme0 = THEMES[f.themes[0]] || {};
   const themeLabels = f.themes.map((k) => (THEMES[k] || {}).label).filter(Boolean).join(" · ");
   const subLabel = f.subcategory && theme0.sub ? theme0.sub[f.subcategory] : "";
@@ -660,9 +699,12 @@ function buildFiche(f) {
   if (cities[0]) infoItems.push(`<div class="info-item">${CAR_ICON}<b>~${engine.formatDuration(cities[0].min)}</b><span>De ${esc(cities[0].label)}</span></div>`);
   const infoRow = infoItems.length ? `<div class="info-row">${infoItems.join("")}</div>` : "";
 
-  const draftNote = !verified
-    ? `<div class="draft-note"><b>En cours de vérification.</b> Cette fiche attend encore la confirmation des faits par la rédaction (lieu, source, date) avant publication officielle.</div>`
-    : "";
+  const draftNote =
+    info.key === "brouillon"
+      ? `<div class="draft-note"><b>En cours de vérification.</b> Cette fiche attend encore la confirmation des faits par la rédaction (lieu, source, date) avant publication officielle.</div>`
+      : info.key === "reserve"
+      ? `<div class="draft-note reserve"><b>Quelques détails à confirmer.</b> Le lieu a été vérifié par la rédaction, mais certaines informations pratiques (horaires, tarifs ou position exacte) restent à préciser sur place.</div>`
+      : "";
 
   // Citation mise en avant (optionnelle, par fiche) : coupe le texte en deux,
   // à la manière d'une citation extraite. Renseignée via fiches.json → "highlight".
@@ -708,7 +750,7 @@ function buildFiche(f) {
   // Infos pratiques : champs libres de fiches.json → "practical", plus catégorie, statut et coordonnées.
   const rows = Object.entries(f.practical || {}).map(([k, v]) => [k, esc(v)]);
   if (subLabel) rows.push(["Catégorie", esc(subLabel)]);
-  rows.push(["Statut", verified ? "Vérifié sur place par la rédaction" : "En cours de vérification"]);
+  rows.push(["Statut", info.labelFull]);
   if (f.coords) rows.push(["Coordonnées", `<span class="mono">${f.coords.lat}, ${f.coords.lon}</span>`]);
   const practical = `<section class="fiche-sec">
       <h2 class="sec-title">Infos pratiques</h2>
@@ -749,7 +791,7 @@ function buildFiche(f) {
     : [];
   const nearby = others.length
     ? `<section class="fiche-sec"><h2 class="sec-title">À proximité</h2>${others
-        .map(({ o, km }) => placeRowHtml(o, `${Math.round(km)} km à vol d'oiseau · ${o.status === "verifie" ? "vérifié" : "en cours de vérification"}`))
+        .map(({ o, km }) => placeRowHtml(o, `${Math.round(km)} km à vol d'oiseau · ${statusInfo(o.status).label.toLowerCase()}`))
         .join("")}</section>`
     : "";
 
@@ -760,7 +802,7 @@ function buildFiche(f) {
       ${heroMedia}
       ${heroNavHtml({ back: true, topper: breadcrumb })}
       <div class="hero-vert"><span>Le guide — édition ${year}</span></div>
-      <div class="hero-status ${verified ? "ok" : "draft"}"><i></i><span>${verified ? "Vérifié sur place" : "En cours de vérification"}</span></div>
+      <div class="hero-status ${info.heroClass}"><i></i><span>${info.label}</span></div>
       <div class="fiche-hero-text">
         <span class="hero-tags">${esc(themeLabels)}</span>
         <h1>${esc(f.title)}</h1>
@@ -824,10 +866,10 @@ function buildFiche(f) {
             title: f.title,
             lat: f.coords.lat,
             lon: f.coords.lon,
-            verified,
+            statusKey: info.key,
             others: fiches
               .filter((o) => o.id !== f.id && o.coords)
-              .map((o) => ({ title: o.title, url: ficheUrl(o), lat: o.coords.lat, lon: o.coords.lon, verified: o.status === "verifie" })),
+              .map((o) => ({ title: o.title, url: ficheUrl(o), lat: o.coords.lat, lon: o.coords.lon, statusKey: statusInfo(o.status).key })),
           }
         : null
     )};
@@ -901,7 +943,7 @@ function buildContribuer() {
 function buildItineraire() {
   const ITIN = site.itinerary;
   const verifiedForItin = fiches
-    .filter((f) => f.status === "verifie" && f.coords)
+    .filter((f) => isItineraryReady(f) && f.coords)
     .map((f) => ({
       id: f.id,
       title: f.title,
@@ -926,11 +968,20 @@ function buildItineraire() {
 
     <form class="form-wrap" id="itinStep1">
       <div class="field">
+        <label for="it-depart">Ville de départ <span class="hint">(optionnel — pour des étapes sur la route)</span></label>
+        <div class="autocomplete-wrap">
+          <input id="it-depart" type="text" autocomplete="off" placeholder="Ex. Paris…">
+          <div id="it-depart-suggestions" class="autocomplete-list" hidden></div>
+        </div>
+        <p class="hint">Si vous l'indiquez, on vous propose des lieux sur la route plutôt qu'autour d'un seul point.</p>
+      </div>
+      <div class="field">
         <label for="it-place">Où comptez-vous séjourner ? <span class="hint">(ville, village, adresse…)</span></label>
         <div class="autocomplete-wrap">
           <input id="it-place" type="text" autocomplete="off" placeholder="Ex. Bourges, Cher…" required>
           <div id="it-place-suggestions" class="autocomplete-list" hidden></div>
         </div>
+        <p class="hint no-idea-hint">Pas d'idée précise ? <a href="/classement/">Découvrir les lieux par thème →</a></p>
       </div>
       <div class="field">
         <label for="it-radius">Distance que vous êtes prêt·e à parcourir par jour</label>
@@ -939,6 +990,7 @@ function buildItineraire() {
           <option value="50" selected>Jusqu'à 50 km</option>
           <option value="100">Jusqu'à 100 km</option>
           <option value="150">Jusqu'à 150 km</option>
+          <option value="250">Au-delà de 150 km</option>
         </select>
       </div>
       <div class="field">
@@ -1015,7 +1067,7 @@ function buildItineraire() {
 function buildMonItineraire() {
   const ITIN = site.itinerary;
   const verifiedForItin = fiches
-    .filter((f) => f.status === "verifie" && f.coords)
+    .filter((f) => isItineraryReady(f) && f.coords)
     .map((f) => ({ id: f.id, title: f.title, image: f.image || null, url: ficheUrl(f) }));
 
   const content = `<section class="view">
@@ -1048,7 +1100,8 @@ function buildBord() {
   const stats = {
     total: fiches.length,
     verifie: fiches.filter((f) => f.status === "verifie").length,
-    brouillon: fiches.filter((f) => f.status !== "verifie").length,
+    reserve: fiches.filter((f) => f.status === "reserve").length,
+    brouillon: fiches.filter((f) => statusInfo(f.status).key === "brouillon").length,
   };
   const content = `<section class="view">
     <div class="section-head">
@@ -1095,7 +1148,7 @@ function buildBord() {
     window.__FICHE_STATS__ = ${JSON.stringify(stats)};
     window.__FICHES_FOR_ITINERARY__ = ${JSON.stringify(
       fiches
-        .filter((f) => f.status === "verifie" && f.coords)
+        .filter((f) => isItineraryReady(f) && f.coords)
         .map((f) => ({
           id: f.id,
           title: f.title,

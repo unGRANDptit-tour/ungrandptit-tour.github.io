@@ -107,7 +107,7 @@
       });
     }
     return fiches.filter(function (f) {
-      if (f.status && f.status !== "verifie") return false;
+      if (f.status && f.status !== "verifie" && f.status !== "reserve") return false;
       if (!f.coords || typeof f.coords.lat !== "number" || typeof f.coords.lon !== "number") return false;
       if (idSet && !idSet[f.id]) return false;
       var themeOk = !themes || (f.themes || []).some(function (t) {
@@ -127,7 +127,7 @@
     if (!baseCoords || typeof baseCoords.lat !== "number" || typeof baseCoords.lon !== "number") return [];
     var out = [];
     fiches.forEach(function (f) {
-      if (f.status && f.status !== "verifie") return;
+      if (f.status && f.status !== "verifie" && f.status !== "reserve") return;
       if (!f.coords || typeof f.coords.lat !== "number" || typeof f.coords.lon !== "number") return;
       var dist = haversineKm(baseCoords, f.coords);
       if (dist <= maxKm) out.push({ fiche: f, distanceKm: dist });
@@ -296,6 +296,53 @@
     });
   }
 
+  /* Distance d'un point à la ligne droite entre deux villes (départ ->
+     destination), et sa progression le long de cette ligne (0 = au départ,
+     1 = à la destination, <0 ou >1 = avant/après). Projection plane simple
+     avec correction cosinus sur la longitude — largement suffisante à
+     l'échelle de la France, cohérente avec le reste du moteur qui utilise
+     déjà des approximations à vol d'oiseau plutôt qu'un vrai routage. */
+  function crossTrack(start, end, point) {
+    var latRef = (start.lat + end.lat) / 2;
+    var kx = 111.32 * Math.cos(toRad(latRef));
+    var ky = 110.57;
+    var ax = start.lon * kx, ay = start.lat * ky;
+    var bx = end.lon * kx, by = end.lat * ky;
+    var px = point.lon * kx, py = point.lat * ky;
+    var dx = bx - ax, dy = by - ay;
+    var len2 = dx * dx + dy * dy;
+    if (len2 === 0) return { distanceKm: haversineKm(start, point), t: 0 };
+    var t = ((px - ax) * dx + (py - ay) * dy) / len2;
+    var tClamped = Math.max(0, Math.min(1, t));
+    var projx = ax + tClamped * dx, projy = ay + tClamped * dy;
+    var ddx = px - projx, ddy = py - projy;
+    return { distanceKm: Math.sqrt(ddx * ddx + ddy * ddy), t: t };
+  }
+
+  /* Fiches vérifiées (ou "reserve") à coordonnées connues, dans un couloir
+     donné autour du trajet à vol d'oiseau entre un point de départ et une
+     destination — pour proposer des étapes "sur la route" plutôt
+     qu'autour d'un seul point. Écarte ce qui tombe clairement avant le
+     départ ou après la destination (marge de 5 % de la longueur du
+     trajet). Retourne [{fiche, distanceKm, t}], triés dans l'ordre du
+     trajet (t croissant) plutôt que par distance. */
+  function nearbyOnRoute(fiches, startCoords, endCoords, corridorKm) {
+    if (!startCoords || !endCoords) return [];
+    if (typeof startCoords.lat !== "number" || typeof endCoords.lat !== "number") return [];
+    var out = [];
+    fiches.forEach(function (f) {
+      if (f.status && f.status !== "verifie" && f.status !== "reserve") return;
+      if (!f.coords || typeof f.coords.lat !== "number" || typeof f.coords.lon !== "number") return;
+      var r = crossTrack(startCoords, endCoords, f.coords);
+      if (r.t < -0.05 || r.t > 1.05) return;
+      if (r.distanceKm <= corridorKm) out.push({ fiche: f, distanceKm: r.distanceKm, t: r.t });
+    });
+    out.sort(function (a, b) {
+      return a.t - b.t;
+    });
+    return out;
+  }
+
   return {
     DEFAULT_CFG: DEFAULT_CFG,
     haversineKm: haversineKm,
@@ -304,5 +351,6 @@
     planItinerary: planItinerary,
     recomputeTimes: recomputeTimes,
     nearbyFiches: nearbyFiches,
+    nearbyOnRoute: nearbyOnRoute,
   };
 });

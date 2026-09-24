@@ -52,115 +52,145 @@
     ficheById[f.id] = f;
   });
 
-  /* ---------- étape 1 : point de départ ---------- */
-  var placeInput = document.getElementById("it-place");
-  var suggestBox = document.getElementById("it-place-suggestions");
+  /* ---------- étape 1 : point de départ (optionnel) + destination ----------
+     Même mécanique d'autocomplétion (API Adresse gratuite) pour les deux
+     champs : fabriquée une fois par setupAutocomplete(), instanciée deux
+     fois avec son propre état (annulation de requête, minuteur, sélection)
+     pour que les deux champs ne se marchent pas dessus. */
   var radiusSelect = document.getElementById("it-radius");
   var daysInput = document.getElementById("it-days");
   var step1Submit = document.getElementById("it-step1-submit");
 
-  var selectedPlace = null; // {label, lat, lon}
-  var searchAbort = null;
-  var searchTimer = null;
+  function setupAutocomplete(input, box, onSelectChange) {
+    var selected = null; // {label, lat, lon}
+    var searchAbort = null;
+    var searchTimer = null;
+
+    function clearSuggestions() {
+      if (!box) return;
+      box.innerHTML = "";
+      box.hidden = true;
+      box.__items = null;
+    }
+
+    function showSuggestions(items) {
+      if (!box) return;
+      if (!items.length) {
+        box.innerHTML = '<div class="autocomplete-empty">Aucun lieu trouvé — essayez un autre nom.</div>';
+        box.hidden = false;
+        return;
+      }
+      box.innerHTML = items
+        .map(function (it, i) {
+          return '<div class="autocomplete-item" data-idx="' + i + '">' + esc(it.label) + "</div>";
+        })
+        .join("");
+      box.hidden = false;
+      box.__items = items;
+    }
+
+    function geocode(query) {
+      if (searchAbort) {
+        try {
+          searchAbort.abort();
+        } catch (e) {}
+      }
+      var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+      searchAbort = ctrl;
+      var url = "https://api-adresse.data.gouv.fr/search/?limit=6&q=" + encodeURIComponent(query);
+      fetch(url, ctrl ? { signal: ctrl.signal } : {})
+        .then(function (r) {
+          return r.ok ? r.json() : Promise.reject(new Error("http_" + r.status));
+        })
+        .then(function (data) {
+          var items = (data.features || [])
+            .map(function (f) {
+              if (!f.geometry || !f.geometry.coordinates) return null;
+              return {
+                label: (f.properties && f.properties.label) || query,
+                lon: f.geometry.coordinates[0],
+                lat: f.geometry.coordinates[1],
+              };
+            })
+            .filter(Boolean);
+          showSuggestions(items);
+        })
+        .catch(function (err) {
+          if (err && err.name === "AbortError") return;
+          if (box) {
+            box.innerHTML = '<div class="autocomplete-empty">Recherche impossible pour l’instant — réessayez.</div>';
+            box.hidden = false;
+          }
+        });
+    }
+
+    if (input) {
+      input.addEventListener("input", function () {
+        selected = null;
+        if (onSelectChange) onSelectChange(null);
+        var q = input.value.trim();
+        clearTimeout(searchTimer);
+        if (q.length < 3) {
+          clearSuggestions();
+          return;
+        }
+        searchTimer = setTimeout(function () {
+          geocode(q);
+        }, 300);
+      });
+      input.addEventListener("blur", function () {
+        // délai pour laisser le mousedown sur une suggestion se déclencher
+        // avant que le blur ne referme la liste
+        setTimeout(clearSuggestions, 150);
+      });
+    }
+
+    if (box) {
+      box.addEventListener("mousedown", function (e) {
+        var item = e.target.closest ? e.target.closest(".autocomplete-item") : null;
+        if (!item) return;
+        e.preventDefault();
+        var idx = parseInt(item.getAttribute("data-idx"), 10);
+        var items = box.__items || [];
+        var picked = items[idx];
+        if (!picked) return;
+        selected = picked;
+        if (input) input.value = picked.label;
+        clearSuggestions();
+        if (onSelectChange) onSelectChange(selected);
+      });
+    }
+
+    return {
+      setValue: function (v) {
+        selected = v;
+      },
+      get: function () {
+        return selected;
+      },
+      triggerSearch: function (q) {
+        if (input) input.value = q;
+        geocode(q);
+      },
+    };
+  }
+
+  var selectedPlace = null; // {label, lat, lon} — destination (obligatoire)
+  var selectedDepart = null; // {label, lat, lon} — départ (optionnel, pour le mode "sur la route")
 
   function updateStep1Submit() {
     if (step1Submit) step1Submit.disabled = !selectedPlace;
   }
 
-  function clearSuggestions() {
-    if (!suggestBox) return;
-    suggestBox.innerHTML = "";
-    suggestBox.hidden = true;
-    suggestBox.__items = null;
-  }
-
-  function showSuggestions(items) {
-    if (!suggestBox) return;
-    if (!items.length) {
-      suggestBox.innerHTML = '<div class="autocomplete-empty">Aucun lieu trouvé — essayez un autre nom.</div>';
-      suggestBox.hidden = false;
-      return;
-    }
-    suggestBox.innerHTML = items
-      .map(function (it, i) {
-        return '<div class="autocomplete-item" data-idx="' + i + '">' + esc(it.label) + "</div>";
-      })
-      .join("");
-    suggestBox.hidden = false;
-    suggestBox.__items = items;
-  }
-
-  function geocode(query) {
-    if (searchAbort) {
-      try {
-        searchAbort.abort();
-      } catch (e) {}
-    }
-    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
-    searchAbort = ctrl;
-    var url = "https://api-adresse.data.gouv.fr/search/?limit=6&q=" + encodeURIComponent(query);
-    fetch(url, ctrl ? { signal: ctrl.signal } : {})
-      .then(function (r) {
-        return r.ok ? r.json() : Promise.reject(new Error("http_" + r.status));
-      })
-      .then(function (data) {
-        var items = (data.features || [])
-          .map(function (f) {
-            if (!f.geometry || !f.geometry.coordinates) return null;
-            return {
-              label: (f.properties && f.properties.label) || query,
-              lon: f.geometry.coordinates[0],
-              lat: f.geometry.coordinates[1],
-            };
-          })
-          .filter(Boolean);
-        showSuggestions(items);
-      })
-      .catch(function (err) {
-        if (err && err.name === "AbortError") return;
-        if (suggestBox) {
-          suggestBox.innerHTML = '<div class="autocomplete-empty">Recherche impossible pour l’instant — réessayez.</div>';
-          suggestBox.hidden = false;
-        }
-      });
-  }
-
-  if (placeInput) {
-    placeInput.addEventListener("input", function () {
-      selectedPlace = null;
-      updateStep1Submit();
-      var q = placeInput.value.trim();
-      clearTimeout(searchTimer);
-      if (q.length < 3) {
-        clearSuggestions();
-        return;
-      }
-      searchTimer = setTimeout(function () {
-        geocode(q);
-      }, 300);
-    });
-    placeInput.addEventListener("blur", function () {
-      // délai pour laisser le mousedown sur une suggestion se déclencher
-      // avant que le blur ne referme la liste
-      setTimeout(clearSuggestions, 150);
-    });
-  }
-
-  if (suggestBox) {
-    suggestBox.addEventListener("mousedown", function (e) {
-      var item = e.target.closest ? e.target.closest(".autocomplete-item") : null;
-      if (!item) return;
-      e.preventDefault();
-      var idx = parseInt(item.getAttribute("data-idx"), 10);
-      var items = suggestBox.__items || [];
-      var picked = items[idx];
-      if (!picked) return;
-      selectedPlace = picked;
-      if (placeInput) placeInput.value = picked.label;
-      clearSuggestions();
-      updateStep1Submit();
-    });
-  }
+  var placeInput = document.getElementById("it-place");
+  var placeAuto = setupAutocomplete(placeInput, document.getElementById("it-place-suggestions"), function (v) {
+    selectedPlace = v;
+    updateStep1Submit();
+  });
+  var departInput = document.getElementById("it-depart");
+  var departAuto = setupAutocomplete(departInput, document.getElementById("it-depart-suggestions"), function (v) {
+    selectedDepart = v;
+  });
 
   updateStep1Submit();
 
@@ -208,9 +238,11 @@
 
   var selectedIds = {};
   var currentBase = null;
+  var currentDepart = null; // non-null quand le mode "sur la route" est actif
   var map = null;
   var mapMarkers = [];
   var mapCircle = null;
+  var mapRouteLine = null;
 
   var THEME_VAR = { patrimoine: "--forest", spirituel: "--ochre", insolite: "--trail", nature: "--water" };
   function themeColor(theme) {
@@ -287,7 +319,7 @@
   if (proposalsEl) proposalsEl.addEventListener("change", onProposalChange);
   if (recoEl) recoEl.addEventListener("change", onProposalChange);
 
-  function ensureMap(base, radiusKm, entries) {
+  function ensureMap(base, radiusKm, entries, depart) {
     if (!mapEl || typeof L === "undefined") return;
     if (!map) {
       map = L.map(mapEl, { zoomControl: true, attributionControl: true });
@@ -306,17 +338,40 @@
       map.removeLayer(mapCircle);
       mapCircle = null;
     }
+    if (mapRouteLine) {
+      map.removeLayer(mapRouteLine);
+      mapRouteLine = null;
+    }
 
-    L.circleMarker([base.lat, base.lon], { radius: 7, color: "#fff", weight: 2, fillColor: cssVar("--ink", "#1a1a1a"), fillOpacity: 1 })
-      .addTo(map)
-      .bindPopup("<b>Votre point de départ</b>");
+    if (depart) {
+      // Mode "sur la route" : un repère par ville, un trait pointillé entre
+      // les deux (approximatif — ce n'est pas un vrai itinéraire routier),
+      // pas de cercle puisque la zone de recherche est un couloir, pas un rayon.
+      L.circleMarker([depart.lat, depart.lon], { radius: 7, color: "#fff", weight: 2, fillColor: cssVar("--ink", "#1a1a1a"), fillOpacity: 1 })
+        .addTo(map)
+        .bindPopup("<b>Votre point de départ</b>");
+      L.circleMarker([base.lat, base.lon], { radius: 7, color: "#fff", weight: 2, fillColor: cssVar("--accent", "#2b4c8c"), fillOpacity: 1 })
+        .addTo(map)
+        .bindPopup("<b>Votre destination</b>");
+      mapRouteLine = L.polyline(
+        [
+          [depart.lat, depart.lon],
+          [base.lat, base.lon],
+        ],
+        { color: cssVar("--ink-faint", "#857e6e"), weight: 2, dashArray: "2 8" }
+      ).addTo(map);
+    } else {
+      L.circleMarker([base.lat, base.lon], { radius: 7, color: "#fff", weight: 2, fillColor: cssVar("--ink", "#1a1a1a"), fillOpacity: 1 })
+        .addTo(map)
+        .bindPopup("<b>Votre point de départ</b>");
 
-    mapCircle = L.circle([base.lat, base.lon], {
-      radius: radiusKm * 1000,
-      color: cssVar("--forest", "#2f4d3a"),
-      weight: 1,
-      fillOpacity: 0.05,
-    }).addTo(map);
+      mapCircle = L.circle([base.lat, base.lon], {
+        radius: radiusKm * 1000,
+        color: cssVar("--forest", "#2f4d3a"),
+        weight: 1,
+        fillOpacity: 0.05,
+      }).addTo(map);
+    }
 
     entries.forEach(function (entry) {
       var f = entry.fiche;
@@ -335,11 +390,13 @@
       mapMarkers.push({ id: f.id, marker: marker });
     });
 
-    var pts = [[base.lat, base.lon]].concat(
-      entries.map(function (e) {
-        return [e.fiche.coords.lat, e.fiche.coords.lon];
-      })
-    );
+    var pts = [[base.lat, base.lon]]
+      .concat(depart ? [[depart.lat, depart.lon]] : [])
+      .concat(
+        entries.map(function (e) {
+          return [e.fiche.coords.lat, e.fiche.coords.lon];
+        })
+      );
     if (pts.length > 1) map.fitBounds(pts, { padding: [24, 24], maxZoom: 12 });
     else map.setView([base.lat, base.lon], 10);
     setTimeout(function () {
@@ -347,20 +404,21 @@
     }, 60);
   }
 
-  function goToStep2(base, radiusKm) {
+  function goToStep2(base, radiusKm, depart) {
     currentBase = base;
+    currentDepart = depart || null;
     selectedIds = {};
 
-    var inRadius = ENGINE.nearbyFiches(fiches, base, radiusKm);
+    var inRadius = depart ? ENGINE.nearbyOnRoute(fiches, depart, base, radiusKm) : ENGINE.nearbyFiches(fiches, base, radiusKm);
     var inRadiusIds = {};
     inRadius.forEach(function (e) {
       inRadiusIds[e.fiche.id] = true;
     });
 
-    // coups de cœur de la rédaction un peu plus loin que le rayon choisi,
-    // que le visiteur n'aurait pas vus sinon — jamais mélangés aux
+    // coups de cœur de la rédaction un peu plus loin que le rayon/couloir
+    // choisi, que le visiteur n'aurait pas vus sinon — jamais mélangés aux
     // propositions "dans le rayon", toujours présentés à part.
-    var wider = ENGINE.nearbyFiches(fiches, base, radiusKm * 2);
+    var wider = depart ? ENGINE.nearbyOnRoute(fiches, depart, base, radiusKm * 2) : ENGINE.nearbyFiches(fiches, base, radiusKm * 2);
     var reco = wider
       .filter(function (e) {
         return e.fiche.redactionPick && !inRadiusIds[e.fiche.id];
@@ -369,16 +427,30 @@
 
     renderProposals(inRadius);
     renderReco(reco);
-    ensureMap(base, radiusKm, inRadius.concat(reco));
+    ensureMap(base, radiusKm, inRadius.concat(reco), depart);
 
     if (step2Sub) {
-      step2Sub.textContent =
-        (inRadius.length
-          ? inRadius.length + (inRadius.length > 1 ? " lieux vérifiés trouvés autour de " : " lieu vérifié trouvé autour de ") + base.label
-          : "Aucun lieu vérifié autour de " + base.label + " pour l’instant") +
-        " (jusqu'à " +
-        radiusKm +
-        " km/jour). Cochez ceux qui vous intéressent.";
+      if (depart) {
+        step2Sub.textContent =
+          (inRadius.length
+            ? inRadius.length + (inRadius.length > 1 ? " lieux vérifiés trouvés sur la route entre " : " lieu vérifié trouvé sur la route entre ")
+            : "Aucun lieu vérifié sur la route entre ") +
+          depart.label +
+          " et " +
+          base.label +
+          (inRadius.length ? "" : " pour l’instant") +
+          " (couloir de " +
+          radiusKm +
+          " km). Cochez ceux qui vous intéressent.";
+      } else {
+        step2Sub.textContent =
+          (inRadius.length
+            ? inRadius.length + (inRadius.length > 1 ? " lieux vérifiés trouvés autour de " : " lieu vérifié trouvé autour de ") + base.label
+            : "Aucun lieu vérifié autour de " + base.label + " pour l’instant") +
+          " (jusqu'à " +
+          radiusKm +
+          " km/jour). Cochez ceux qui vous intéressent.";
+      }
     }
 
     step1.hidden = true;
@@ -404,7 +476,7 @@
     daysInput.value = days;
 
     var radiusKm = parseInt(radiusSelect.value, 10) || 50;
-    goToStep2(selectedPlace, radiusKm);
+    goToStep2(selectedPlace, radiusKm, selectedDepart);
   });
 
   if (backBtn) {
@@ -427,7 +499,7 @@
         days: parseInt(daysInput.value, 10) || 1,
         pace: document.getElementById("it-pace").value,
         ficheIds: ids,
-        startCoords: currentBase,
+        startCoords: currentDepart || currentBase,
       };
       var email = emailEl ? emailEl.value.trim() : "";
       var placeRequest = placeRequestEl ? placeRequestEl.value.trim().slice(0, 300) : "";
@@ -435,7 +507,7 @@
       var plan = ENGINE.planItinerary(fiches, params, cfg);
       window.UGPT_renderItineraryPlan(resultEl, plan, ficheById, {
         placeRequest: placeRequest,
-        startLabel: currentBase ? currentBase.label : null,
+        startLabel: currentDepart ? currentDepart.label : currentBase ? currentBase.label : null,
       });
       resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
 

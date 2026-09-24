@@ -1,7 +1,8 @@
 /* Carte « Situer le lieu » d'une fiche (charte Signature) : vraie carte
    Leaflet, fond OpenStreetMap France, centrée sur le lieu, avec les autres
    lieux du guide autour. Données embarquées par build.js dans
-   window.__FICHE_MAP__ = {title, lat, lon, verified, others:[{title,url,lat,lon,verified}]}. */
+   window.__FICHE_MAP__ = {title, lat, lon, statusKey, others:[{title,url,lat,lon,statusKey}]}.
+   statusKey vaut "verifie" (bleu), "reserve" (sarcelle) ou "brouillon" (ambre). */
 (function () {
   "use strict";
 
@@ -22,6 +23,14 @@
       .replace(/"/g, "&quot;");
   }
 
+  var FILL_BY_STATUS = { verifie: "#2b4c8c", reserve: "#2e6d70", brouillon: "#b3862b" };
+  function pinClass(statusKey) {
+    return statusKey === "verifie" ? "" : " " + statusKey;
+  }
+  function fillColor(statusKey) {
+    return FILL_BY_STATUS[statusKey] || FILL_BY_STATUS.brouillon;
+  }
+
   var map = L.map(el, { zoomControl: true, scrollWheelZoom: false }).setView([d.lat, d.lon], 10);
   L.tileLayer("https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -30,12 +39,12 @@
       '&copy; <a href="https://www.openstreetmap.fr/" target="_blank" rel="noopener">OpenStreetMap France</a> | &copy; contributeurs <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
   }).addTo(map);
 
-  // Le lieu de la fiche : gros repère (bleu si vérifié, ambre sinon).
+  // Le lieu de la fiche : gros repère, coloré selon son statut.
   var mainIcon = L.divIcon({
     className: "",
     iconSize: [30, 30],
     iconAnchor: [15, 15],
-    html: '<span class="pin-main' + (d.verified ? "" : " draft") + '"></span>',
+    html: '<span class="pin-main' + pinClass(d.statusKey) + '"></span>',
   });
   L.marker([d.lat, d.lon], { icon: mainIcon, title: d.title, alt: d.title, keyboard: false }).addTo(map);
 
@@ -46,7 +55,7 @@
       radius: 7,
       color: "#ffffff",
       weight: 2.5,
-      fillColor: o.verified ? "#2b4c8c" : "#b3862b",
+      fillColor: fillColor(o.statusKey),
       fillOpacity: 1,
     })
       .addTo(map)
