@@ -472,7 +472,7 @@ function buildHome() {
       ${heroNavHtml({ back: false, topper })}
       <div class="home-hero-title">
         <span class="hero-eyebrow">Le guide des lieux insolites</span>
-        <h1>Votre grand<br>p'tit tour</h1>
+        <h1>Votre <span class="w-grand">GRAND</span><br><span class="w-ptit">p'tit tour</span></h1>
       </div>
       <div class="hero-vert"><span>Le guide — édition ${year}</span></div>
       <div class="home-hero-foot">
