@@ -173,7 +173,7 @@ function heroNavHtml({ back, topper }) {
     : "";
   return `<div class="hero-topper">${topper}</div>
     <div class="hero-nav">
-      <a class="hero-brand" href="/">${backLink}<span class="masthead">${esc(site.siteName)}</span></a>
+      <a class="hero-brand" href="/">${backLink}<img class="brand-logo" src="${esc(site.logoPath)}" alt=""><span class="masthead">${esc(site.siteName)}</span></a>
       <div class="hero-nav-actions">
         <a class="hero-cta" href="/itineraire/">Composer</a>
         <button class="icon-btn on-photo" id="themeToggleBtn" title="Apparence" aria-label="Changer l'apparence" type="button">${THEME_TOGGLE_SVG}</button>
