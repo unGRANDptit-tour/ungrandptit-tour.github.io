@@ -3,109 +3,121 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Un Grand P'tit Tour — le mag — lieux insolites &amp; patrimoine français</title>
-<meta name="description" content="le mag — lieux insolites &amp; patrimoine français — carnet de route et fiches vérifiées, par @un_grand_ptit_tour.">
+<title>Un Grand P'tit Tour — le guide — lieux insolites &amp; patrimoine français</title>
+<meta name="description" content="le guide — lieux insolites &amp; patrimoine français — le guide des lieux insolites et du patrimoine, vérifiés sur place, par @un_grand_ptit_tour.">
 <link rel="canonical" href="https://ungrandptit-tour.github.io/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Un Grand P'tit Tour">
-<meta property="og:title" content="Un Grand P'tit Tour — le mag — lieux insolites &amp; patrimoine français">
-<meta property="og:description" content="le mag — lieux insolites &amp; patrimoine français — carnet de route et fiches vérifiées, par @un_grand_ptit_tour.">
+<meta property="og:title" content="Un Grand P'tit Tour — le guide — lieux insolites &amp; patrimoine français">
+<meta property="og:description" content="le guide — lieux insolites &amp; patrimoine français — le guide des lieux insolites et du patrimoine, vérifiés sur place, par @un_grand_ptit_tour.">
 <meta property="og:url" content="https://ungrandptit-tour.github.io/">
-<meta property="og:image" content="https://ungrandptit-tour.github.io/assets/img/logo.jpg">
+<meta property="og:image" content="https://ungrandptit-tour.github.io/assets/img/accueil/hero.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Un Grand P'tit Tour — le mag — lieux insolites &amp; patrimoine français">
-<meta name="twitter:description" content="le mag — lieux insolites &amp; patrimoine français — carnet de route et fiches vérifiées, par @un_grand_ptit_tour.">
-<meta name="twitter:image" content="https://ungrandptit-tour.github.io/assets/img/logo.jpg">
+<meta name="twitter:title" content="Un Grand P'tit Tour — le guide — lieux insolites &amp; patrimoine français">
+<meta name="twitter:description" content="le guide — lieux insolites &amp; patrimoine français — le guide des lieux insolites et du patrimoine, vérifiés sur place, par @un_grand_ptit_tour.">
+<meta name="twitter:image" content="https://ungrandptit-tour.github.io/assets/img/accueil/hero.jpg">
 <link rel="icon" href="/assets/img/logo.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Libre+Franklin:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,340;1,9..144,400;1,9..144,500&family=Libre+Franklin:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script>(function(){try{var t=localStorage.getItem('ugpt-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
 </head>
 <body>
 <div class="app" id="app">
-  <div class="topbar">
-    <div class="brand-row">
-      <a href="/"><img class="brand-logo" src="/assets/img/logo.jpg" alt="Logo Un Grand P'tit Tour"></a>
-      <div class="brand">
-        <a href="/" style="text-decoration:none;"><span class="name display">Un Grand P'tit Tour</span></a>
-        <span class="tagline">le mag — lieux insolites &amp; patrimoine français</span>
-        <a class="handle" href="https://www.instagram.com/un_grand_ptit_tour" target="_blank" rel="noopener">@un_grand_ptit_tour</a>
-      </div>
-    </div>
-    <button class="icon-btn" id="themeToggleBtn" title="Apparence" aria-label="Changer l'apparence" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7"/></svg>
-    </button>
-  </div>
   <div class="status-banner" id="statusBanner" hidden>
     <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 9v4M12 16.5h.01M10.3 3.9 2.7 17.3a1.8 1.8 0 0 0 1.56 2.7h15.5a1.8 1.8 0 0 0 1.56-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z"/></svg>
     <span id="statusBannerText">Les votes, commentaires et suggestions sont temporairement suspendus.</span>
   </div>
-  <div class="views">
+  <main class="views">
     <section class="view home-view">
-    <div class="home-hero">
-      <img class="home-hero-logo" src="/assets/img/logo.jpg" alt="Logo Un Grand P'tit Tour">
-      <h1 class="display home-hero-title">Un Grand P'tit Tour</h1>
-      <p class="home-hero-tag">le mag — lieux insolites &amp; patrimoine français</p>
-      <p class="home-hero-intro">Des lieux insolites et du patrimoine français, repérés sur le terrain, vérifiés par la rédaction avant d'être racontés.</p>
-    </div>
-    <div class="home-mission">
-      <h2 class="home-mission-title">Notre mission</h2>
-      <p>Un Grand P'tit Tour aide à composer des vacances sur mesure autour de lieux insolites et du patrimoine français — art brut, curiosités, sites naturels, architecture religieuse, tout ce qui ne figure pas dans les guides habituels. Indiquez où vous comptez séjourner et jusqu'où vous êtes prêt·e à rouler chaque jour : on vous propose les lieux vérifiés à proximité, vous choisissez ceux qui vous font envie, et on en construit un séjour clé en main pour les visites — un peu de patrimoine, un peu d'insolite, un peu de tout — toujours relu par la rédaction avant d'être définitif.</p>
-      <a class="btn-primary" href="/itineraire/" style="text-decoration:none;">Composer mon séjour</a>
-    </div>
-    <div class="home-steps">
-      <div class="home-step">
-        <div class="home-step-num">1</div>
-        <div class="home-step-body">
-          <h3>Indiquez votre point de départ</h3>
-          <p>La ville ou le village où vous séjournez, et la distance que vous êtes prêt·e à parcourir chaque jour.</p>
-        </div>
-      </div>
-      <div class="home-step">
-        <div class="home-step-num">2</div>
-        <div class="home-step-body">
-          <h3>Choisissez vos lieux</h3>
-          <p>On vous propose les lieux vérifiés autour, sur la carte ; vous cochez ceux qui vous intéressent, et la rédaction glisse ses propres coups de cœur du coin.</p>
-        </div>
-      </div>
-      <div class="home-step">
-        <div class="home-step-num">3</div>
-        <div class="home-step-body">
-          <h3>Recevez votre itinéraire</h3>
-          <p>Un parcours jour par jour, temps de route compris, toujours relu par la rédaction avant d'être confirmé.</p>
-        </div>
+    <header class="home-hero">
+      <img class="home-hero-img" src="/assets/img/accueil/hero.jpg" alt="Coucher de soleil sur la mer, vu entre deux rochers">
+      <div class="hero-topper"><a class="now" href="/fiches/maison-couleur-du-temps/">Coup de cœur du moment</a><a href="/classement/">Patrimoine &amp; architecture</a><a href="/classement/">Chemins spirituels</a><a href="/classement/">Insolite &amp; extraordinaire</a><a href="/classement/">Nature &amp; paysages</a></div>
+    <div class="hero-nav">
+      <a class="hero-brand" href="/"><span class="masthead">Un Grand P'tit Tour</span></a>
+      <div class="hero-nav-actions">
+        <a class="hero-cta" href="/itineraire/">Composer</a>
+        <button class="icon-btn on-photo" id="themeToggleBtn" title="Apparence" aria-label="Changer l'apparence" type="button"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7"/></svg></button>
       </div>
     </div>
-    <div class="home-gallery" role="group" aria-label="Photos du magazine"><div class="home-gallery-slide"><img src="/assets/img/fiches/maison-couleur-du-temps-hero.jpg" alt="La Maison Couleur du Temps, Vénas (Allier)" loading="lazy"></div><div class="home-gallery-slide"><img src="/assets/img/fiches/maison-couleur-du-temps-pinceaux.jpg" alt="L'atelier du peintre Chop" loading="lazy"></div></div>
-    <div class="home-hero home-hero-menu">
-      <nav class="home-menu" aria-label="Navigation principale">
-        <a class="home-menu-item" href="/carte/">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg>
-          Carte
-        </a>
-        <a class="home-menu-item" href="/classement/">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M8 20V10M13 20V4M18 20v-7"/><path d="M4 20h16"/></svg>
-          Classement
-        </a>
-        <a class="home-menu-item" href="/itineraire/">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M4 19 9 6l3 8 3-6 5 11"/></svg>
-          Itinéraire
-        </a>
-        <a class="home-menu-item" href="/contribuer/">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M4 20.5 4.9 17 16 5.9a1.7 1.7 0 0 1 2.4 0l.7.7a1.7 1.7 0 0 1 0 2.4L8 20l-4 .5Z"/></svg>
-          Contribuer
-        </a>
-      </nav>
+      <div class="home-hero-title">
+        <span class="hero-eyebrow">Le guide des lieux insolites</span>
+        <h1>Votre grand<br>p'tit tour</h1>
+      </div>
+      <div class="hero-vert"><span>Le guide — édition 2026</span></div>
+      <div class="home-hero-foot">
+        <p>Lieux insolites et patrimoine français, repérés puis vérifiés sur le terrain par la rédaction.</p>
+        <a href="#carte">Découvrir la carte ↓</a>
+      </div>
+    </header>
+
+    <form class="home-search" action="/itineraire/" method="get">
+      <div class="s-row1">
+        <label for="hs-lieu">Où séjournez-vous ?</label>
+        <input id="hs-lieu" name="lieu" placeholder="Ex. Bourges, Cher…" autocomplete="off">
+      </div>
+      <div class="s-row2">
+        <div class="s-f"><label for="hs-km">Distance / jour</label><select id="hs-km" name="km"><option value="20">20 km</option><option value="50" selected>50 km</option><option value="100">100 km</option><option value="150">150 km</option></select></div>
+        <div class="s-f"><label for="hs-jours">Durée</label><select id="hs-jours" name="jours"><option value="1">1 jour</option><option value="2" selected>2 jours</option><option value="3">3 jours</option><option value="4">4 jours</option><option value="5">5 jours</option><option value="6">6 jours</option><option value="7">7 jours</option><option value="8">8 jours</option><option value="9">9 jours</option><option value="10">10 jours</option><option value="11">11 jours</option><option value="12">12 jours</option><option value="13">13 jours</option><option value="14">14 jours</option></select></div>
+        <button class="s-btn" type="submit">Composer</button>
+      </div>
+    </form>
+
+    <div class="facts">
+      <div class="fact"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/></svg><b>1 lieu</b><span>Au guide</span></div>
+      <div class="fact"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg><b>4 thèmes</b><span>À explorer</span></div>
+      <div class="fact"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/></svg><b>1 vérifié</b><span>Sur place</span></div>
     </div>
-    <div class="section-head">
-      <h2>Explorez la carte</h2>
-      <p>Filtrez par région, touchez un repère pour ouvrir la fiche du lieu.</p>
-    </div>
-    
-    <div class="chip-row" id="mapRegionChips">
+
+    <section class="home-mission">
+      <span class="label">Notre mission</span>
+      <blockquote>« Composer des vacances sur mesure, autour de lieux insolites et du patrimoine français. »</blockquote>
+      <p>Art brut, curiosités, sites naturels, architecture religieuse — tout ce qui ne figure pas dans les guides habituels. Indiquez où vous séjournez et jusqu'où vous êtes prêt·e à rouler chaque jour : on vous propose les lieux vérifiés autour, vous choisissez, et la rédaction relit tout avant de confirmer votre séjour.</p>
+    </section>
+
+    <figure class="home-band">
+      <img src="/assets/img/accueil/falaises.jpg" alt="Falaises dorées au soleil couchant, reflétées sur le sable mouillé" loading="lazy">
+      <figcaption><b>Hors des sentiers battus</b><span>Photo @un_grand_ptit_tour</span></figcaption>
+    </figure>
+
+    <section class="home-steps">
+      <span class="label">Comment ça marche</span>
+      <div class="step"><div class="step-n">01</div><div><h3>Point de départ</h3><p>La ville ou le village où vous séjournez, et la distance que vous êtes prêt·e à parcourir chaque jour.</p></div></div>
+      <div class="step"><div class="step-n">02</div><div><h3>Vos lieux</h3><p>On vous propose les lieux vérifiés autour, sur la carte ; vous cochez ceux qui vous font envie, la rédaction ajoute ses coups de cœur du coin.</p></div></div>
+      <div class="step"><div class="step-n">03</div><div><h3>Votre itinéraire</h3><p>Un parcours jour par jour, temps de route compris, toujours relu par la rédaction avant d'être confirmé.</p></div></div>
+    </section>
+
+    <section class="home-pick">
+      <span class="label">Le coup de cœur de la rédaction</span>
+      <a class="pick-img" href="/fiches/maison-couleur-du-temps/"><img src="/assets/img/fiches/maison-couleur-du-temps-hero.jpg" alt="La Maison Couleur du Temps" loading="lazy"></a>
+      <div class="pick-body">
+        <div class="card-tags"><span class="tag theme-insolite">Insolite &amp; extraordinaire</span><span class="tag region">Auvergne-Rhône-Alpes</span></div>
+        <h3><a href="/fiches/maison-couleur-du-temps/">La Maison Couleur du Temps</a></h3>
+        
+        <p>Une grange ordinaire devenue, fresque après fresque, l'œuvre d'une vie entière.</p>
+        <div class="meta-row">
+          <span class="m mono">Vérifié · visite 1h15</span>
+          <a href="/fiches/maison-couleur-du-temps/">Lire la fiche →</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-places">
+      <div class="sec-head-row"><h2 class="sec-title">Les lieux du guide</h2><a href="/classement/">Tout voir →</a></div>
+      <a class="p-card" href="/fiches/maison-couleur-du-temps/">
+      <img src="/assets/img/fiches/maison-couleur-du-temps-hero.jpg" alt="" loading="lazy">
+      <div class="p-card-body"><span class="tag theme-insolite">Insolite &amp; extraordinaire</span><h4>La Maison Couleur du Temps</h4><span class="badge verified"><i></i>Vérifié sur place</span></div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+    </a>
+    </section>
+
+    <section class="home-map" id="carte">
+      <h2 class="sec-title">La carte du guide</h2>
+      <p class="sec-lead">Touchez un repère pour ouvrir la fiche du lieu. Filtrez par région pour ne garder que ce qui est près de vous.</p>
+      
+      <div class="chip-row" id="mapRegionChips">
     <button type="button" class="chip active" data-region="tous">Toutes les régions</button>
     <button type="button" class="chip" data-region="aura">Auvergne-Rhône-Alpes</button>
     <button type="button" class="chip" data-region="bfc">Bourgogne-Franche-Comté</button>
@@ -121,31 +133,12 @@
     <button type="button" class="chip" data-region="pdl">Pays de la Loire</button>
     <button type="button" class="chip" data-region="paca">Provence-Alpes-Côte d'Azur</button>
   </div>
-    <div id="mapEl" class="real-map compact"></div>
-    <div class="map-legend" id="mapLegend">
+      <div id="mapEl" class="real-map home-real-map"></div>
+      <div class="map-legend" id="mapLegend">
       <span><span class="dot" style="background:var(--forest)"></span>Patrimoine &amp; architecture</span><span><span class="dot" style="background:var(--ochre)"></span>Chemins spirituels</span><span><span class="dot" style="background:var(--trail)"></span>Insolite &amp; extraordinaire</span><span><span class="dot" style="background:var(--water)"></span>Nature &amp; paysages</span>
     </div>
-    <div class="section-head">
-      <h2>Le magazine</h2>
-      <p>Les lieux insolites et le patrimoine français, en couverture.</p>
-    </div>
-    <div class="mag-grid"><a class="mag-cover" href="/fiches/maison-couleur-du-temps/" style="background-image:url('/assets/img/fiches/maison-couleur-du-temps-hero.jpg')">
-    
-    <div class="mag-cover-top">
-      <span class="badge verified"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M4 12.5 9 17l11-11"/></svg>Vérifié</span>
-      <span class="mag-cover-votes" data-vote-count="maison-couleur-du-temps"><svg viewBox="0 0 24 24"><path d="M12 20.5s-7.8-4.7-10.2-9.4C.4 8 1.7 4.7 4.9 3.7c2-.6 4 .1 5.3 1.8.4.5 1 .5 1.4 0 1.3-1.7 3.3-2.4 5.3-1.8 3.2 1 4.5 4.3 3.1 7.4-2.4 4.7-10.2 9.4-10.2 9.4Z"/></svg><span class="vote-num">0</span></span>
-    </div>
-    <div class="mag-cover-bottom">
-      <div class="mag-cover-eyebrow"><span class="tag theme-insolite">Insolite &amp; extraordinaire</span><span class="tag">Auvergne-Rhône-Alpes</span></div>
-      <h2>La Maison Couleur du Temps</h2>
-      <p class="mag-cover-summary">Une grange ordinaire devenue, fresque après fresque, l'œuvre d'une vie entière.</p>
-    </div>
-  </a></div>
-    <div class="itin-cta">
-      <h2>Prêt·e à composer votre séjour ?</h2>
-      <p>Indiquez où vous comptez séjourner et jusqu'où vous êtes prêt·e à rouler chaque jour : on s'occupe de vous proposer les lieux vérifiés autour, vous n'avez plus qu'à choisir.</p>
-      <a class="btn-primary" href="/itineraire/" style="text-decoration:none;">Créer mon itinéraire</a>
-    </div>
+    </section>
+
     <div class="follow-row">
       <a href="https://www.instagram.com/un_grand_ptit_tour" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg>
@@ -157,28 +150,31 @@
       </a>
     </div>
     <div class="newsletter-block">
-    <h2>Ne rate aucun nouveau lieu</h2>
+    <span class="label">La lettre du guide</span>
+    <h2>Ne ratez aucun nouveau lieu</h2>
     <p>Un email quand une nouvelle fiche est publiée. Pas de spam, désinscription en un clic.</p>
     <form class="newsletter-form" id="newsletterForm">
-      <input type="email" id="newsletterEmail" placeholder="ton@email.fr" required autocomplete="email">
+      <input type="email" id="newsletterEmail" placeholder="votre@email.fr" required autocomplete="email" aria-label="Votre email">
       <button class="btn-primary" type="submit">S'inscrire</button>
     </form>
     <p class="newsletter-note" id="newsletterNote"></p>
   </div>
     <footer class="site-footer">
-    <div class="legal-links">
-      <a href="/mentions-legales/">Mentions légales</a>
-      <a href="/confidentialite/">Confidentialité</a>
-      <a href="/cookies/">Cookies</a>
+    <div class="foot-brand">Un Grand P'tit Tour</div>
+    <p class="foot-tag">Lieux insolites et patrimoine français, vérifiés sur place par la rédaction.</p>
+    <div class="foot-cols">
+      <div class="foot-col"><h5>Explorer</h5><a href="/carte/">Carte</a><a href="/classement/">Classement</a><a href="/itineraire/">Itinéraire</a></div>
+      <div class="foot-col"><h5>Suivre</h5><a href="https://www.instagram.com/un_grand_ptit_tour" target="_blank" rel="noopener">Instagram</a><a href="https://www.facebook.com/Ungrandptit-tour" target="_blank" rel="noopener">Facebook</a><a href="/contribuer/">Proposer un lieu</a></div>
+      <div class="foot-col"><h5>Légal</h5><a href="/mentions-legales/">Mentions légales</a><a href="/confidentialite/">Confidentialité</a><a href="/cookies/">Cookies</a></div>
     </div>
-    <div class="copyright">© 2026 Un Grand P'tit Tour — contenu et photos @un_grand_ptit_tour</div>
+    <div class="foot-bottom"><span>© 2026 Un Grand P'tit Tour — photos @un_grand_ptit_tour</span><span class="mono">Le guide</span></div>
   </footer>
   </section>
   <script>window.__FICHES_MAP__ = [{"id":"maison-couleur-du-temps","title":"La Maison Couleur du Temps","summary":"Une grange ordinaire devenue, fresque après fresque, l'œuvre d'une vie entière.","coords":{"lon":2.765,"lat":46.4775},"theme":"insolite","region":"aura","country":"france","url":"/fiches/maison-couleur-du-temps/"}];</script>
-  </div>
-  <nav class="tabbar">
-    <a class="tab-btn active" href="/">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M4 4.8c2-.7 5-1 8 0v14.4c-3-1-6-.7-8 0V4.8ZM20 4.8c-2-.7-5-1-8 0v14.4c3-1 6-.7 8 0V4.8Z"/></svg>
+  </main>
+  <nav class="tabbar" aria-label="Navigation">
+    <a class="tab-btn active" href="/" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20H4z"/><path d="M10 20v-5h4v5"/></svg>
         <span>Accueil</span>
       </a>
     <a class="tab-btn" href="/carte/">
@@ -199,10 +195,9 @@
       </a>
   </nav>
 </div>
-
 <div class="cookie-banner" id="cookieBanner" hidden>
     <div class="cookie-banner-inner">
-      <p>Ce site utilise des cookies de mesure d'audience (Google Analytics) pour comprendre comment le magazine est lu. Vous pouvez accepter ou refuser — voir notre <a href="/cookies/">politique cookies</a>.</p>
+      <p>Ce site utilise des cookies de mesure d'audience (Google Analytics) pour comprendre comment le guide est lu. Vous pouvez accepter ou refuser — voir notre <a href="/cookies/">politique cookies</a>.</p>
       <div class="cookie-actions">
         <button class="btn-primary" id="cookieAccept" type="button">Accepter</button>
         <button class="btn-secondary" id="cookieRefuse" type="button">Refuser</button>

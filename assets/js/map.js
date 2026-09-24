@@ -18,27 +18,31 @@
   var THEME_VAR = { patrimoine: "--forest", spirituel: "--ochre", insolite: "--trail", nature: "--water" };
   function themeColor(theme) {
     var v = getComputedStyle(document.documentElement).getPropertyValue(THEME_VAR[theme] || "--forest");
-    return v && v.trim() ? v.trim() : "#2f4d3a";
+    return v && v.trim() ? v.trim() : "#2b4c8c";
   }
 
-  var map = L.map(el, { zoomControl: true, attributionControl: true }).setView([46.6, 2.3], 6);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 18,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+  var map = L.map(el, { zoomControl: true, attributionControl: true, scrollWheelZoom: false }).setView([46.6, 2.3], 6);
+  // Fond OpenStreetMap France (noms en français), choisi par la rédaction le 24/09/2026.
+  L.tileLayer("https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    subdomains: "abc",
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.fr/" target="_blank" rel="noopener">OpenStreetMap France</a> | &copy; contributeurs <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
   }).addTo(map);
 
   var entries = [];
   window.__FICHES_MAP__.forEach(function (f) {
     if (!f.coords || typeof f.coords.lat !== "number" || typeof f.coords.lon !== "number") return;
     var marker = L.circleMarker([f.coords.lat, f.coords.lon], {
-      radius: 9,
-      color: "#fbfbf5",
-      weight: 2,
+      radius: 10,
+      color: "#ffffff",
+      weight: 3,
       fillColor: themeColor(f.theme),
-      fillOpacity: 0.95,
+      fillOpacity: 1,
     });
     marker.bindPopup(
-      "<b>" + esc(f.title) + "</b>" + (f.summary ? esc(f.summary) : "") + '<br><a href="' + esc(f.url) + '">Voir la fiche →</a>'
+      "<b>" + esc(f.title) + "</b>" + (f.summary ? '<span class="popup-sum">' + esc(f.summary) + "</span>" : "") +
+        '<a class="popup-link" href="' + esc(f.url) + '">Lire la fiche →</a>'
     );
     marker.on("click", function () {
       marker.openPopup();
