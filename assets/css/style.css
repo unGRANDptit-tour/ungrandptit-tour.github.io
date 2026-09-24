@@ -285,6 +285,7 @@ img{max-width:100%;}
 .badge{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:var(--ink-soft);}
 .badge i{width:6px;height:6px;border-radius:50%;flex:none;background:var(--amber);}
 .badge.verified i{background:var(--accent);}
+.badge.reserve i{background:var(--water);}
 .empty-note{padding:20px 16px;color:var(--ink-faint);font-size:13px;text-align:center;}
 
 /* ---------- fiche ---------- */
@@ -297,8 +298,10 @@ img{max-width:100%;}
 .hero-status{position:absolute;z-index:4;right:20px;top:calc(82px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:6px;background:rgba(18,17,16,.55);backdrop-filter:blur(6px);padding:7px 12px 7px 9px;border-radius:20px;}
 .hero-status i{width:6px;height:6px;border-radius:50%;background:#e0a840;flex:none;}
 .hero-status.ok i{background:#8fb0ff;}
+.hero-status.reserve i{background:#6fc2c5;}
 .hero-status span{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#f3e6c6;}
 .hero-status.ok span{color:#dfe7fb;}
+.hero-status.reserve span{color:#d3f0f0;}
 .fiche-hero-text{position:absolute;z-index:3;left:26px;right:20px;bottom:44px;}
 .hero-tags{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:#b9cbef;margin-bottom:10px;text-shadow:0 1px 6px rgba(0,0,0,.5);}
 .fiche-hero-text h1{font-family:"Fraunces",Georgia,serif;font-style:italic;font-weight:340;color:#fff;font-size:32px;line-height:1.06;letter-spacing:-.01em;margin:0;text-shadow:0 2px 14px rgba(0,0,0,.5);}
@@ -320,6 +323,8 @@ img{max-width:100%;}
 .fiche-pullquote{font-family:"Fraunces",Georgia,serif;font-style:italic;font-weight:400;font-size:20px;line-height:1.35;color:var(--accent-deep);border-left:3px solid var(--accent);margin:22px 0 24px;padding:2px 0 2px 16px;text-wrap:balance;}
 .draft-note{background:var(--amber-tint);border-left:3px solid var(--amber);border-radius:0 10px 10px 0;padding:12px 14px;font-size:12.5px;line-height:1.55;color:var(--ink);margin:0 0 20px;}
 .draft-note b{color:var(--warn);}
+.draft-note.reserve{background:var(--water-tint);border-left-color:var(--water);}
+.draft-note.reserve b{color:var(--water);}
 .fiche-verdict{background:var(--accent-tint);border-radius:12px;padding:16px;margin:8px 0 0;}
 .fiche-verdict .kicker{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:8px;}
 .fiche-verdict p{font-family:"Fraunces",Georgia,serif;font-style:italic;font-size:15px;line-height:1.55;color:var(--accent-deep);margin:0 0 8px;}
@@ -356,6 +361,7 @@ img{max-width:100%;}
 .situ-dist span{display:block;font-size:8.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);font-weight:700;margin-top:4px;}
 .pin-main{display:block;width:30px;height:30px;border-radius:50%;background:var(--accent);border:4px solid #fff;box-shadow:0 0 0 8px rgba(43,76,140,.18),0 4px 12px rgba(20,18,16,.35);}
 .pin-main.draft{background:var(--amber);box-shadow:0 0 0 8px rgba(179,134,43,.2),0 4px 12px rgba(20,18,16,.35);}
+.pin-main.reserve{background:var(--water);box-shadow:0 0 0 8px rgba(46,109,112,.2),0 4px 12px rgba(20,18,16,.35);}
 .sources{margin:0;padding:0;list-style:none;}
 .sources li{font-size:12.5px;padding:8px 0;border-top:1px solid var(--line);}
 .sources li:first-child{border-top:none;}
@@ -403,6 +409,9 @@ img{max-width:100%;}
 .field label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);}
 .field .hint{font-size:11px;color:var(--ink-faint);font-weight:400;text-transform:none;letter-spacing:0;}
 p.hint{font-size:11px;color:var(--ink-faint);}
+.no-idea-hint{margin-top:8px;}
+.no-idea-hint a{color:var(--accent);font-weight:600;text-decoration:none;}
+.no-idea-hint a:hover{text-decoration:underline;}
 .comment-form textarea,.comment-form input,.field input,.field textarea,.field select{
   width:100%;border:1px solid var(--line);border-radius:10px;background:var(--card);
   padding:11px 12px;font:inherit;font-size:14px;color:var(--ink);resize:vertical;
