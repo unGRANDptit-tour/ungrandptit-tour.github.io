@@ -1,18 +1,22 @@
-/* Filtrage côté client du classement par thème / sous-catégorie / pays / région,
-   à partir des attributs data-themes / data-sub / data-country / data-region
-   posés sur chaque .fiche-card par build.js (aucune donnée n'est rechargée :
-   tout est déjà dans la page). Le filtre "pays" (#countryChips) n'existe dans
-   le HTML que si un deuxième pays a été ajouté à site.json — tant que seule la
-   France est présente, ce bloc reste inactif de lui-même. */
+/* Filtrage côté client du classement par thème / sous-catégorie / pays /
+   région / département, à partir des attributs data-themes / data-sub /
+   data-country / data-region / data-departement posés sur chaque .fiche-card
+   par build.js (aucune donnée n'est rechargée : tout est déjà dans la page).
+   Le filtre "pays" (#countryChips) n'existe dans le HTML que si un deuxième
+   pays a été ajouté à site.json — tant que seule la France est présente, ce
+   bloc reste inactif de lui-même. Le filtre région/département est un bloc
+   `.region-dept-filter` (deux menus déroulants) géré par
+   assets/js/region-dept-filter.js, qui émet un événement "rdfilter" à
+   chaque changement — voir plus bas. */
 (function () {
   "use strict";
 
   var themeChips = document.getElementById("themeChips");
-  var regionChips = document.getElementById("regionChips");
+  var regionDeptGroup = document.querySelector('.region-dept-filter[data-filter-group="regionChips"]');
   var countryChips = document.getElementById("countryChips");
   var subEyebrow = document.getElementById("subEyebrow");
   var list = document.getElementById("rankList");
-  if (!themeChips || !regionChips || !list) return;
+  if (!themeChips || !list) return;
 
   var subRows = Array.prototype.slice.call(document.querySelectorAll(".sub-chip-row"));
 
@@ -23,7 +27,7 @@
   emptyNote.hidden = true;
   list.appendChild(emptyNote);
 
-  var state = { theme: "tous", sub: "tous", country: "tous", region: "tous" };
+  var state = { theme: "tous", sub: "tous", country: "tous", region: "tous", departement: "tous" };
 
   function applyFilters() {
     var visible = 0;
@@ -32,11 +36,13 @@
       var sub = el.getAttribute("data-sub") || "";
       var country = el.getAttribute("data-country") || "";
       var region = el.getAttribute("data-region") || "";
+      var departement = el.getAttribute("data-departement") || "";
       var themeOk = state.theme === "tous" || themes.indexOf(state.theme) !== -1;
       var subOk = state.theme === "tous" || state.sub === "tous" || sub === state.sub;
       var countryOk = state.country === "tous" || country === state.country;
       var regionOk = state.region === "tous" || region === state.region;
-      var show = themeOk && subOk && countryOk && regionOk;
+      var deptOk = state.departement === "tous" || departement === state.departement;
+      var show = themeOk && subOk && countryOk && regionOk && deptOk;
       el.hidden = !show;
       if (show) visible++;
     });
@@ -75,11 +81,18 @@
   }
 
   wireChips(themeChips, "theme");
-  wireChips(regionChips, "region");
   if (countryChips) wireChips(countryChips, "country");
   subRows.forEach(function (row) {
     wireChips(row, "sub");
   });
+
+  if (regionDeptGroup) {
+    regionDeptGroup.addEventListener("rdfilter", function (e) {
+      state.region = e.detail.region;
+      state.departement = e.detail.departement;
+      applyFilters();
+    });
+  }
 
   showSubRowFor(state.theme);
   applyFilters();

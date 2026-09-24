@@ -19,6 +19,7 @@ const engine = require("./assets/js/itinerary-engine.js");
 
 const site = JSON.parse(fs.readFileSync(path.join(ROOT, "data/site.json"), "utf8"));
 const fiches = JSON.parse(fs.readFileSync(path.join(ROOT, "data/fiches.json"), "utf8"));
+const DEPARTEMENTS = JSON.parse(fs.readFileSync(path.join(ROOT, "data/departements.json"), "utf8"));
 const fichesById = {};
 fiches.forEach((f) => (fichesById[f.id] = f));
 
@@ -185,12 +186,15 @@ function statusBannerHtml() {
 }
 
 // Barre du haut « Signature » (pages sans grande photo) : masthead en capitales.
-function topbarHtml() {
+// Le menu bureau (navLinksHtml) ne s'affiche qu'à partir de 900px — en dessous,
+// la tabbar du bas reste la seule navigation, comme avant.
+function topbarHtml(active) {
   return `<header class="topbar">
     <a class="brand-row" href="/">
       <img class="brand-logo" src="${esc(site.logoPath)}" alt="">
       <span class="masthead">${esc(site.siteName)}</span>
     </a>
+    ${navLinksHtml(active, false)}
     <div class="topbar-actions">
       <a class="topbar-cta" href="/itineraire/">Composer</a>
       <button class="icon-btn" id="themeToggleBtn" title="Apparence" aria-label="Changer l'apparence" type="button">${THEME_TOGGLE_SVG}</button>
@@ -199,14 +203,16 @@ function topbarHtml() {
   ${statusBannerHtml()}`;
 }
 
-// Navigation posée sur la photo (accueil et fiches).
-function heroNavHtml({ back, topper }) {
+// Navigation posée sur la photo (accueil et fiches). Même menu bureau que
+// topbarHtml, en version blanche/ombrée pour rester lisible sur la photo.
+function heroNavHtml({ back, topper, active }) {
   const backLink = back
     ? `<a class="hero-back" href="/" aria-label="Retour à l'accueil"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></a>`
     : "";
   return `<div class="hero-topper">${topper}</div>
     <div class="hero-nav">
       <a class="hero-brand" href="/">${backLink}<img class="brand-logo" src="${esc(site.logoPath)}" alt=""><span class="masthead">${esc(site.siteName)}</span></a>
+      ${navLinksHtml(active || null, true)}
       <div class="hero-nav-actions">
         <a class="hero-cta" href="/itineraire/">Composer</a>
         <button class="icon-btn on-photo" id="themeToggleBtn" title="Apparence" aria-label="Changer l'apparence" type="button">${THEME_TOGGLE_SVG}</button>
@@ -214,24 +220,39 @@ function heroNavHtml({ back, topper }) {
     </div>`;
 }
 
+// Partagé entre la barre d'onglets mobile (tabbar, en bas) et le menu bureau
+// (topbar-nav / hero-nav-links, en haut, ≥900px — voir navLinksHtml ci-dessous).
+const NAV_ITEMS = [
+  ["/", "home", "Accueil", '<path d="M4 10.5 12 4l8 6.5V20H4z"/><path d="M10 20v-5h4v5"/>'],
+  ["/carte/", "carte", "Carte", '<path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z"/><path d="M9 4v14M15 6v14"/>'],
+  ["/classement/", "classement", "Classement", '<path d="M8 20V10M13 20V4M18 20v-7"/><path d="M4 20h16"/>'],
+  ["/contribuer/", "contribuer", "Contribuer", '<path d="M4 20.5 4.9 17 16 5.9a1.7 1.7 0 0 1 2.4 0l.7.7a1.7 1.7 0 0 1 0 2.4L8 20l-4 .5Z"/>'],
+  ["/bord/", "bord", "Bord", '<circle cx="12" cy="12" r="8.5"/><path d="M12 12 15.5 8.5M12 7v1.2M17 12h-1.2M12 17v-1.2M7 12h1.2"/>'],
+];
+
 function tabbarHtml(active) {
-  const items = [
-    ["/", "home", "Accueil", '<path d="M4 10.5 12 4l8 6.5V20H4z"/><path d="M10 20v-5h4v5"/>'],
-    ["/carte/", "carte", "Carte", '<path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z"/><path d="M9 4v14M15 6v14"/>'],
-    ["/classement/", "classement", "Classement", '<path d="M8 20V10M13 20V4M18 20v-7"/><path d="M4 20h16"/>'],
-    ["/contribuer/", "contribuer", "Contribuer", '<path d="M4 20.5 4.9 17 16 5.9a1.7 1.7 0 0 1 2.4 0l.7.7a1.7 1.7 0 0 1 0 2.4L8 20l-4 .5Z"/>'],
-    ["/bord/", "bord", "Bord", '<circle cx="12" cy="12" r="8.5"/><path d="M12 12 15.5 8.5M12 7v1.2M17 12h-1.2M12 17v-1.2M7 12h1.2"/>'],
-  ];
   return `<nav class="tabbar" aria-label="Navigation">
-    ${items
-      .map(
-        ([href, key, label, svg]) =>
-          `<a class="tab-btn${active === key ? " active" : ""}" href="${href}"${active === key ? ' aria-current="page"' : ""}>
+    ${NAV_ITEMS.map(
+      ([href, key, label, svg]) =>
+        `<a class="tab-btn${active === key ? " active" : ""}" href="${href}"${active === key ? ' aria-current="page"' : ""}>
         <svg viewBox="0 0 24 24" fill="none">${svg}</svg>
         <span>${label}</span>
       </a>`
-      )
-      .join("\n    ")}
+    ).join("\n    ")}
+  </nav>`;
+}
+
+// Menu bureau (≥900px) : mêmes 5 destinations que la tabbar mobile, mais en
+// liens texte dans le bandeau du haut — la tabbar du bas se masque à cette
+// largeur (voir style.css) puisque la navigation passe alors par ici.
+// onPhoto=true pour le rendu blanc/ombré utilisé sur une photo plein cadre
+// (accueil, fiche) plutôt que le rendu sombre standard (topbar blanche).
+function navLinksHtml(active, onPhoto) {
+  return `<nav class="${onPhoto ? "hero-nav-links" : "topbar-nav"}" aria-label="Navigation">
+    ${NAV_ITEMS.map(
+      ([href, key, label]) =>
+        `<a href="${href}"${active === key ? ' class="active" aria-current="page"' : ""}>${esc(label)}</a>`
+    ).join("\n    ")}
   </nav>`;
 }
 
@@ -312,7 +333,7 @@ function ficheCardHtml(f, opts) {
   const rankNum = opts.rank ? `<span class="rank-num">${String(opts.rank).padStart(2, "0")}</span>` : "";
   const votesHtml = `<span class="card-votes" data-vote-count="${f.id}">${HEART_SVG}<span class="vote-num">0</span></span>`;
   const glyphInner = f.image ? `<img src="${esc(f.image)}" alt="" loading="lazy">` : glyphSvg(f.themes[0]);
-  return `<a class="fiche-card" href="${ficheUrl(f)}" data-themes="${f.themes.join(",")}" data-region="${f.region}" data-country="${esc(countryOfRegion(f.region))}" data-sub="${esc(f.subcategory || "")}">
+  return `<a class="fiche-card" href="${ficheUrl(f)}" data-themes="${f.themes.join(",")}" data-region="${f.region}" data-departement="${esc(f.departement || "")}" data-country="${esc(countryOfRegion(f.region))}" data-sub="${esc(f.subcategory || "")}">
     ${rankNum}
     <div class="card-glyph theme-${f.themes[0]}">${glyphInner}</div>
     <div class="card-body">
@@ -331,7 +352,7 @@ function page({ title, description, path: pagePath, ogImage, active, bodyClass, 
   return `${headHtml({ title, description, path: pagePath, ogImage, extraStyles, noIndex })}
 <body${bodyClass ? ` class="${bodyClass}"` : ""}>
 <div class="app" id="app">
-  ${heroNav ? statusBannerHtml() : topbarHtml()}
+  ${heroNav ? statusBannerHtml() : topbarHtml(active)}
   <main class="views">
     ${content}
   </main>
@@ -412,12 +433,16 @@ function ficheMapJson() {
         coords: f.coords,
         theme: f.themes[0],
         region: f.region,
+        departement: f.departement || null,
         country: countryOfRegion(f.region),
         url: ficheUrl(f),
       }))
   );
 }
 
+// Remplacé le 24/09/2026 par deux menus déroulants (région, puis département
+// filtré selon la région choisie) — voir regionDeptFilterHtml() : les chips de
+// région débordaient et coupaient les dernières régions en version bureau.
 function regionChipsHtml(idAttr) {
   const regionKeys = Object.keys(REGIONS).filter((k) => k !== "a_confirmer");
   const chip = (key, label) => `<button type="button" class="chip${key === "tous" ? " active" : ""}" data-region="${esc(key)}">${esc(label)}</button>`;
@@ -425,6 +450,39 @@ function regionChipsHtml(idAttr) {
     ${chip("tous", "Toutes les régions")}
     ${regionKeys.map((k) => chip(k, regionLabel(k))).join("\n    ")}
   </div>`;
+}
+
+// Deux menus déroulants : région (toutes présentes), puis département —
+// repeuplé côté client (assets/js/region-dept-filter.js) à partir de
+// window.__DEPT_BY_REGION__ selon la région choisie. idPrefix distingue
+// les instances (accueil+carte partagent "mapRegionChips", classement a
+// son propre "regionChips") sans jamais entrer en collision d'ids.
+function regionDeptFilterHtml(idPrefix) {
+  const regionKeys = Object.keys(REGIONS).filter((k) => k !== "a_confirmer");
+  const deptByRegion = {};
+  Object.keys(DEPARTEMENTS).forEach((code) => {
+    const d = DEPARTEMENTS[code];
+    if (!deptByRegion[d.region]) deptByRegion[d.region] = [];
+    deptByRegion[d.region].push({ code, name: d.name });
+  });
+  Object.keys(deptByRegion).forEach((r) => deptByRegion[r].sort((a, b) => a.name.localeCompare(b.name, "fr")));
+
+  return `<div class="region-dept-filter" data-filter-group="${esc(idPrefix)}">
+    <div class="rd-field">
+      <label for="${idPrefix}Region">Région</label>
+      <select id="${idPrefix}Region" class="rd-select" data-role="region">
+        <option value="tous">Toutes les régions</option>
+        ${regionKeys.map((k) => `<option value="${esc(k)}">${esc(regionLabel(k))}</option>`).join("\n        ")}
+      </select>
+    </div>
+    <div class="rd-field">
+      <label for="${idPrefix}Dept">Département</label>
+      <select id="${idPrefix}Dept" class="rd-select" data-role="departement" disabled>
+        <option value="tous">Tous les départements</option>
+      </select>
+    </div>
+  </div>
+  <script>window.__DEPT_BY_REGION__ = window.__DEPT_BY_REGION__ || ${JSON.stringify(deptByRegion)};</script>`;
 }
 
 // N'apparaît que lorsqu'un deuxième pays est réellement présent dans site.json
@@ -507,7 +565,7 @@ function buildHome() {
   const content = `<section class="view home-view">
     <header class="home-hero">
       <img class="home-hero-img" src="${esc(hero.src)}" alt="${esc(hero.alt)}">
-      ${heroNavHtml({ back: false, topper })}
+      ${heroNavHtml({ back: false, topper, active: "home" })}
       <div class="home-hero-title">
         <span class="hero-eyebrow">Le guide des lieux insolites</span>
         <h1>Votre <span class="w-grand">GRAND</span><br><span class="w-ptit">p'tit tour</span></h1>
@@ -566,7 +624,7 @@ function buildHome() {
       <h2 class="sec-title">La carte du guide</h2>
       <p class="sec-lead">Touchez un repère pour ouvrir la fiche du lieu. Filtrez par région pour ne garder que ce qui est près de vous.</p>
       ${countryChipsHtml("mapCountryChips")}
-      ${regionChipsHtml("mapRegionChips")}
+      ${regionDeptFilterHtml("mapRegionChips")}
       <div id="mapEl" class="real-map home-real-map"></div>
       ${mapLegendHtml()}
     </section>
@@ -593,7 +651,7 @@ function buildHome() {
     active: "home",
     content,
     heroNav: true,
-    extraScripts: ["/assets/js/votes.js", "/assets/js/newsletter.js", "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js", "/assets/js/map.js"],
+    extraScripts: ["/assets/js/votes.js", "/assets/js/newsletter.js", "/assets/js/region-dept-filter.js", "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js", "/assets/js/map.js"],
     extraStyles: ["https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"],
   });
 }
@@ -605,7 +663,7 @@ function buildCarte() {
     .join("\n");
   const content = `<section class="view map-view">
     ${countryChipsHtml("mapCountryChips")}
-    ${regionChipsHtml("mapRegionChips")}
+    ${regionDeptFilterHtml("mapRegionChips")}
     <div id="mapEl" class="real-map"></div>
     ${mapLegendHtml()}
     <div class="section-head">
@@ -622,14 +680,13 @@ function buildCarte() {
     path: "/carte/",
     active: "carte",
     content,
-    extraScripts: ["/assets/js/votes.js", "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js", "/assets/js/map.js"],
+    extraScripts: ["/assets/js/votes.js", "/assets/js/region-dept-filter.js", "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js", "/assets/js/map.js"],
     extraStyles: ["https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"],
   });
 }
 
 function buildClassement() {
   const themeChips = ["tous"].concat(Object.keys(THEMES));
-  const regionChips = ["tous"].concat(Object.keys(REGIONS).filter((k) => k !== "a_confirmer"));
   const cards = fiches
     .filter((f) => isItineraryReady(f))
     .map((f, i) => ficheCardHtml(f, { rank: i + 1 }))
@@ -654,10 +711,7 @@ function buildClassement() {
       })
       .join("\n    ")}
     ${countryChipsHtml("countryChips")}
-    <div class="eyebrow" style="padding:2px 16px 0;">Région</div>
-    <div class="chip-row" id="regionChips">
-      ${regionChips.map((k) => `<button class="chip${k === "tous" ? " active" : ""}" data-region="${k}" type="button">${k === "tous" ? "Toutes" : esc(regionLabel(k))}</button>`).join("")}
-    </div>
+    ${regionDeptFilterHtml("regionChips")}
     <div class="rank-list" id="rankList">${cards}</div>
     ${footerHtml()}
   </section>`;
@@ -667,7 +721,7 @@ function buildClassement() {
     path: "/classement/",
     active: "classement",
     content,
-    extraScripts: ["/assets/js/votes.js", "/assets/js/classement.js"],
+    extraScripts: ["/assets/js/votes.js", "/assets/js/region-dept-filter.js", "/assets/js/classement.js"],
   });
 }
 
@@ -736,7 +790,7 @@ function buildFiche(f) {
     galleryBlocks.push(`<div class="gallery-trio">${trio.map((p, i) => `<div class="t${i + 1}">${fig(p)}</div>`).join("")}</div>`);
   });
   const gallery = galleryBlocks.length
-    ? `<section class="fiche-sec"><h2 class="sec-title">Vu sur place</h2><div class="gallery-block">${galleryBlocks.join("")}</div></section>`
+    ? `<section class="fiche-sec fiche-gallery"><h2 class="sec-title">Vu sur place</h2><div class="gallery-block">${galleryBlocks.join("")}</div></section>`
     : "";
 
   const verdictHtml = f.verdict
@@ -752,7 +806,7 @@ function buildFiche(f) {
   if (subLabel) rows.push(["Catégorie", esc(subLabel)]);
   rows.push(["Statut", info.labelFull]);
   if (f.coords) rows.push(["Coordonnées", `<span class="mono">${f.coords.lat}, ${f.coords.lon}</span>`]);
-  const practical = `<section class="fiche-sec">
+  const practical = `<section class="fiche-sec fiche-practical">
       <h2 class="sec-title">Infos pratiques</h2>
       <div class="p-table">${rows.map(([k, v]) => `<div class="p-row"><div class="k">${esc(k)}</div><div class="v">${v}</div></div>`).join("")}</div>
       <div class="p-cta">
@@ -764,7 +818,7 @@ function buildFiche(f) {
   // Situer le lieu : vraie carte en ligne (fiche-map.js) + temps depuis les villes de référence.
   const gpsUrl = f.coords ? `https://www.google.com/maps/dir/?api=1&amp;destination=${f.coords.lat},${f.coords.lon}` : "";
   const situ = f.coords
-    ? `<section class="fiche-sec" id="situer">
+    ? `<section class="fiche-sec fiche-situ" id="situer">
       <h2 class="sec-title">Situer le lieu</h2>
       <div id="ficheMap" class="real-map fiche-map"></div>
       ${
@@ -790,7 +844,7 @@ function buildFiche(f) {
         .slice(0, 4)
     : [];
   const nearby = others.length
-    ? `<section class="fiche-sec"><h2 class="sec-title">À proximité</h2>${others
+    ? `<section class="fiche-sec fiche-nearby"><h2 class="sec-title">À proximité</h2>${others
         .map(({ o, km }) => placeRowHtml(o, `${Math.round(km)} km à vol d'oiseau · ${statusInfo(o.status).label.toLowerCase()}`))
         .join("")}</section>`
     : "";
@@ -823,7 +877,7 @@ function buildFiche(f) {
     ${gallery}
     ${practical}
     ${situ}
-    ${sources ? `<section class="fiche-sec"><h2 class="sec-title">Sources</h2><ul class="sources">${sources}</ul></section>` : ""}
+    ${sources ? `<section class="fiche-sec fiche-sources"><h2 class="sec-title">Sources</h2><ul class="sources">${sources}</ul></section>` : ""}
 
     <div class="action-row">
       <button class="vote-btn" id="voteBtn" type="button" data-fiche="${f.id}">
@@ -843,12 +897,12 @@ function buildFiche(f) {
 
     ${nearby}
 
-    <section class="fiche-sec">
+    <section class="fiche-sec fiche-reco">
       <h2 class="sec-title">Lectures recommandées</h2>
       <div class="reco-scroll" id="recoScroll"></div>
     </section>
 
-    <section class="fiche-sec">
+    <section class="fiche-sec fiche-comments">
       <h2 class="sec-title">Commentaires</h2>
       <div id="commentList"></div>
       <div id="commentFormWrap"></div>

@@ -115,6 +115,11 @@ img{max-width:100%;}
 .icon-btn.on-photo{background:rgba(18,17,16,.35);border-color:rgba(255,255,255,.35);backdrop-filter:blur(4px);}
 .icon-btn.on-photo svg{stroke:#fff;}
 
+/* Menu bureau du bandeau du haut (accueil/carte/classement/contribuer/bord) —
+   cette barre n'existe qu'à partir de 900px (voir la media query bureau plus
+   bas) ; en dessous, la tabbar du bas reste la seule navigation, inchangée. */
+.topbar-nav,.hero-nav-links{display:none;}
+
 .status-banner{display:flex;align-items:flex-start;gap:8px;margin:10px 16px;padding:10px 12px;background:var(--warn-tint);border:1px solid var(--warn);border-radius:10px;font-size:12.5px;color:var(--ink);}
 .status-banner svg{width:16px;height:16px;flex:none;stroke:var(--warn);margin-top:1px;}
 .status-banner[hidden]{display:none;}
@@ -240,6 +245,14 @@ img{max-width:100%;}
 .section-head h2{font-size:24px;}
 .section-head p{margin:0;color:var(--ink-soft);font-size:13px;line-height:1.6;max-width:52ch;}
 .eyebrow{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-faint);font-weight:700;}
+
+/* ---------- filtre région / département (deux menus déroulants liés) ---------- */
+.region-dept-filter{display:flex;gap:10px;padding:8px 20px 12px;flex-wrap:wrap;}
+.rd-field{flex:1;min-width:140px;}
+.rd-field label{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:700;margin-bottom:4px;}
+.rd-select{width:100%;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:9px 10px;font:inherit;font-size:12.5px;font-weight:600;color:var(--ink);}
+.rd-select:disabled{opacity:.5;cursor:not-allowed;}
+.rd-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-tint);}
 
 /* ---------- chips ---------- */
 .chip-row{display:flex;gap:7px;overflow-x:auto;padding:8px 20px;scrollbar-width:none;}
@@ -547,3 +560,149 @@ p.hint{font-size:11px;color:var(--ink-faint);}
 .itin-ctrl-btn{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:var(--paper);cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .itin-ctrl-btn svg{width:12px;height:12px;stroke:var(--ink-soft);fill:none;}
 .itin-admin-actions{display:flex;gap:8px;flex-wrap:wrap;padding:10px 12px;border-top:1px solid var(--line);}
+
+/* ============================================================
+   Mise en page « bureau » (24/09/2026) — au-delà de 900px de
+   large uniquement. Rien ci-dessous ne s'applique au mobile :
+   toutes les règles précédentes restent inchangées en dessous
+   de ce seuil. Pour l'instant : accueil, classement, fiche.
+   ============================================================ */
+@media (min-width:900px){
+  .app{max-width:1180px;border-inline:none;}
+
+  /* La navigation passe par le bandeau du haut à cette largeur : la tabbar
+     du bas (mobile) se masque, et le menu texte apparaît dans topbarHtml /
+     heroNavHtml (voir build.js → navLinksHtml). */
+  .tabbar{display:none;}
+  .topbar{padding-left:24px;padding-right:24px;gap:24px;justify-content:flex-start;}
+  .topbar-nav{display:flex;gap:22px;padding-left:8px;}
+  .topbar-actions{margin-left:auto;}
+  .topbar-nav a{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);text-decoration:none;padding:6px 0;border-bottom:2px solid transparent;}
+  .topbar-nav a:hover{color:var(--ink);}
+  .topbar-nav a.active{color:var(--ink);border-bottom-color:var(--accent);}
+  .hero-nav-links{display:flex;gap:22px;margin-left:32px;}
+  .hero-nav-links a{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:rgba(255,255,255,.78);text-decoration:none;padding:6px 0;border-bottom:2px solid transparent;text-shadow:0 1px 6px rgba(0,0,0,.4);}
+  .hero-nav-links a:hover{color:#fff;}
+  .hero-nav-links a.active{color:#fff;border-bottom-color:#fff;}
+  .hero-nav{justify-content:flex-start;}
+  .hero-nav-actions{margin-left:auto;}
+
+  /* ---------- accueil ---------- */
+  .home-view .home-hero{height:52vh;min-height:420px;max-height:520px;}
+  .home-view .home-hero-title{top:24%;}
+  .home-view .home-hero-title h1{font-size:60px;}
+  .home-view .home-search{max-width:640px;margin:-44px auto 0;}
+  .home-view .facts{max-width:640px;margin:26px auto 0;}
+  .home-view .home-mission{max-width:920px;margin:52px auto 0;padding-left:40px;padding-right:40px;}
+  .home-view .home-band{aspect-ratio:auto;height:400px;}
+  .home-view .home-steps{display:grid;grid-template-columns:repeat(3,1fr);column-gap:36px;row-gap:8px;padding:52px 40px 0;}
+  .home-view .home-steps > .label{grid-column:1 / -1;}
+  .home-view .home-steps .step{border-top:none;padding:0;flex-direction:column;gap:12px;}
+  .home-view .home-pick{display:grid;grid-template-columns:320px 1fr;gap:44px;align-items:center;padding:52px 40px 0;}
+  .home-view .home-pick > .label{grid-column:1 / -1;}
+  .home-view .home-pick .pick-body{padding-top:0;}
+  .home-view .home-pick .pick-body p{max-width:60ch;}
+  .home-view .home-places{padding:52px 40px 0;display:grid;grid-template-columns:1fr 1fr;column-gap:32px;}
+  .home-view .home-places .sec-head-row{grid-column:1 / -1;}
+  .home-view .home-map{padding:52px 40px 0;}
+  .home-view .home-real-map{height:520px;}
+  .home-view .follow-row,.home-view .newsletter-block{max-width:640px;margin-left:auto;margin-right:auto;}
+  .home-view .newsletter-block{margin-top:20px;}
+
+  /* ---------- classement ---------- */
+  #rankList{column-count:2;column-gap:36px;}
+  #rankList .rank-card{break-inside:avoid;}
+
+  /* ---------- fiche ---------- */
+  .detail{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 320px;
+    column-gap:44px;
+    grid-template-areas:
+      "hero hero"
+      "inforow inforow"
+      "body practical"
+      "gallery situ"
+      "sources sources"
+      "action action"
+      "nearby nearby"
+      "reco reco"
+      "comments comments"
+      "footer footer";
+  }
+  .detail > .fiche-hero{grid-area:hero;height:50vh;max-height:480px;}
+  .detail .fiche-hero-text h1{font-size:44px;}
+  .detail > .info-row{grid-area:inforow;max-width:640px;margin:-26px auto 0;}
+  .detail > .detail-body{grid-area:body;padding-right:8px;}
+  .detail > .fiche-gallery{grid-area:gallery;}
+  .detail > .fiche-practical{grid-area:practical;}
+  .detail > .fiche-situ{grid-area:situ;}
+  .detail > .fiche-situ .fiche-map{height:240px;}
+  .detail > .fiche-sources{grid-area:sources;}
+  .detail > .action-row{grid-area:action;}
+  .detail > .fiche-nearby{grid-area:nearby;}
+  .detail > .fiche-reco{grid-area:reco;}
+  .detail > .fiche-comments{grid-area:comments;}
+  .detail > .site-footer{grid-area:footer;margin-top:38px;}
+
+  /* ---------- carte ---------- */
+  .map-view{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 380px;
+    column-gap:32px;
+    align-items:start;
+    grid-template-areas:
+      "filters filters"
+      "map     head"
+      "map     list"
+      "legend  list";
+  }
+  .map-view .region-dept-filter{grid-area:filters;}
+  .map-view #mapEl{grid-area:map;height:560px;}
+  .map-view .map-legend{grid-area:legend;align-self:start;}
+  .map-view .section-head{grid-area:head;}
+  .map-view .fiche-list{grid-area:list;max-height:600px;overflow-y:auto;margin-top:0;}
+
+  /* ---------- itinéraire ---------- */
+  #itinStep1{max-width:560px;margin:0 auto;}
+  #itinStep2:not([hidden]){
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 380px;
+    column-gap:32px;
+    align-items:start;
+    grid-template-areas:
+      "head head"
+      "map  proposals"
+      "map  reco"
+      "map  addform";
+  }
+  #itinStep2 > .section-head{grid-area:head;}
+  #itinMap{grid-area:map;height:480px;width:auto;margin:0;}
+  #itinProposals{grid-area:proposals;}
+  #itinRecoBlock{grid-area:reco;}
+  #itinStep2 > .form-wrap{grid-area:addform;}
+  #itineraryResult{column-count:2;column-gap:32px;max-width:1100px;margin:0 auto;}
+  #itineraryResult .itin-summary,#itineraryResult .itin-client-note{column-span:all;}
+  #itineraryResult .itin-day{break-inside:avoid;}
+
+  /* ---------- tableau de bord ---------- */
+  #dashGrid{grid-template-columns:repeat(4,1fr);}
+  #adminPanel:not([hidden]){
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 300px;
+    column-gap:32px;
+    align-items:start;
+  }
+  #adminPanel > *{grid-column:1;}
+  #adminPanel .stop-panel{
+    grid-column:2;
+    grid-row:1;
+    position:sticky;
+    top:16px;
+    margin-top:0;
+    padding:16px;
+    border:1.5px solid #a83b2e;
+    border-radius:14px;
+    background:var(--card);
+  }
+}

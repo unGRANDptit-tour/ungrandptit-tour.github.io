@@ -6,6 +6,7 @@
     "themes": ["insolite"],
     "subcategory": "art_brut",
     "region": "aura",
+    "departement": "03",
     "status": "verifie",
     "coords": { "lon": 2.765, "lat": 46.4775 },
     "visitDurationMin": 75,
@@ -38,6 +39,7 @@
     ],
     "subcategory": "art_brut",
     "region": "cvl",
+    "departement": "18",
     "status": "reserve",
     "coords": {
       "lon": 2.7,
