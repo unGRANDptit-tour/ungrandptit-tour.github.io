@@ -164,6 +164,36 @@
 
   updateStep1Submit();
 
+  /* ---------- pré-remplissage depuis le formulaire de l'accueil ----------
+     /itineraire/?lieu=Bourges&km=50&jours=2 : on recopie les valeurs et on
+     lance la recherche du lieu ; le visiteur n'a plus qu'à choisir la bonne
+     suggestion (c'est elle qui fixe le point de départ exact). */
+  (function prefillFromQuery() {
+    var qs;
+    try {
+      qs = new URLSearchParams(window.location.search);
+    } catch (e) {
+      return;
+    }
+    var km = qs.get("km");
+    var jours = qs.get("jours");
+    var lieu = qs.get("lieu");
+    if (km && radiusSelect && /^\d{1,3}$/.test(km) && radiusSelect.querySelector('option[value="' + km + '"]')) {
+      radiusSelect.value = km;
+    }
+    if (jours && daysInput && /^\d{1,2}$/.test(jours)) {
+      var max = parseInt(daysInput.getAttribute("max") || "14", 10);
+      daysInput.value = String(Math.max(1, Math.min(max, parseInt(jours, 10))));
+    }
+    if (lieu && placeInput) {
+      placeInput.value = lieu.slice(0, 120);
+      try {
+        placeInput.focus({ preventScroll: true });
+      } catch (e) {}
+      placeInput.dispatchEvent(new Event("input"));
+    }
+  })();
+
   /* ---------- étape 2 : propositions + sélection ---------- */
   var proposalsEl = document.getElementById("itinProposals");
   var recoBlockEl = document.getElementById("itinRecoBlock");
@@ -195,7 +225,7 @@
     var visitTxt = ENGINE.formatDuration(visitMin);
     var glyph = f.image
       ? '<img src="' + esc(f.image) + '" alt="" loading="lazy">'
-      : '<svg viewBox="0 0 24 24" style="width:26px;height:26px;stroke:var(--forest);fill:none;stroke-width:1.5;"><circle cx="12" cy="12" r="8"/></svg>';
+      : '<svg viewBox="0 0 24 24" style="width:26px;height:26px;stroke:var(--accent);fill:none;stroke-width:1.5;"><circle cx="12" cy="12" r="8"/></svg>';
     return (
       '<label class="itin-proposal-item">' +
       '<input type="checkbox" class="itin-proposal-check" data-fiche="' +
@@ -261,9 +291,11 @@
     if (!mapEl || typeof L === "undefined") return;
     if (!map) {
       map = L.map(mapEl, { zoomControl: true, attributionControl: true });
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 18,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
+      L.tileLayer("https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        subdomains: "abc",
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.fr/" target="_blank" rel="noopener">OpenStreetMap France</a> | &copy; contributeurs <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
       }).addTo(map);
     }
     mapMarkers.forEach(function (m) {
