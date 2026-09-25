@@ -140,8 +140,17 @@
 
   /* Construit le plan jour par jour. Ne force jamais un jour vide ou un
      enchaînement de lieux trop éloignés pour tenir dans le budget-temps :
-     s'arrête plus tôt et le dit clairement plutôt que d'inventer. */
-  function planItinerary(fiches, params, cfgInput) {
+     s'arrête plus tôt et le dit clairement plutôt que d'inventer.
+
+     `distanceFn`, si fourni, est une fonction (fromId, toFiche) ->
+     {distanceKm, travelMin} | null — utilisée à la place de l'estimation
+     à vol d'oiseau quand elle est disponible (ex. une vraie matrice de
+     distances routières calculée par routing-client.js). `fromId` vaut
+     "start" pour le tout premier trajet (depuis params.startCoords),
+     sinon l'id de la fiche quittée. Un retour null (ou distanceFn absent)
+     fait retomber ce point de calcul précis sur l'estimation habituelle
+     (haversine × roadDetourFactor) — jamais d'échec en cascade. */
+  function planItinerary(fiches, params, cfgInput, distanceFn) {
     var cfg = mergeCfg(cfgInput);
     var requestedDays = clamp(params.days, 1, cfg.maxDaysRequestable);
     var pace = cfg.paceHoursPerDay[params.pace] ? params.pace : "standard";
@@ -184,16 +193,19 @@
 
     var planDays = [];
     var currentPos = params.startCoords || null;
+    var currentPosId = "start";
 
     for (var d = 0; d < requestedDays && remaining.length; d++) {
       var dayStops = [];
       var timeLeft = dayBudgetMin;
       var pos = currentPos;
+      var posId = currentPosId;
 
       while (remaining.length && dayStops.length < cfg.maxStopsPerDay) {
         var best = null;
         var bestIdx = -1;
         var bestDist = 0;
+        var bestTravelMin = null;
 
         if (pos === null) {
           // Pas de point de départ connu : on démarre sur le lieu le
@@ -204,17 +216,19 @@
         } else {
           var minDist = Infinity;
           for (var i = 0; i < remaining.length; i++) {
-            var dist = haversineKm(pos, remaining[i].coords);
+            var real = distanceFn ? distanceFn(posId, remaining[i]) : null;
+            var dist = real ? real.distanceKm : haversineKm(pos, remaining[i].coords);
             if (dist < minDist) {
               minDist = dist;
               best = remaining[i];
               bestIdx = i;
               bestDist = dist;
+              bestTravelMin = real ? real.travelMin : null;
             }
           }
         }
 
-        var travelMin = travelMinutes(bestDist, cfg);
+        var travelMin = bestTravelMin != null ? bestTravelMin : travelMinutes(bestDist, cfg);
         var visitMin = best.visitDurationMin || cfg.defaultVisitDurationMin;
         var needed = travelMin + visitMin;
         if (needed > timeLeft) break; // ne rentre plus dans la journée : on s'arrête là, honnêtement
@@ -227,6 +241,7 @@
         });
         timeLeft -= needed;
         pos = best.coords;
+        posId = best.id;
         remaining.splice(bestIdx, 1);
       }
 
@@ -246,6 +261,7 @@
         totalTravelMin: totalTravel,
       });
       currentPos = pos;
+      currentPosId = posId;
     }
 
     return {

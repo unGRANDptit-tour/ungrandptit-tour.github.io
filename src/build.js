@@ -1100,6 +1100,7 @@ function buildItineraire() {
     window.__FICHES_FOR_ITINERARY__ = ${JSON.stringify(verifiedForItin)};
     window.__UGPT_ITINERARY_CFG__ = ${JSON.stringify(ITIN)};
     window.__UGPT_THEME_LABELS__ = ${JSON.stringify(themeLabels)};
+    window.__UGPT_ORS_KEY__ = ${JSON.stringify((site.routing && site.routing.orsApiKey) || "")};
   </script>`;
 
   return page({
@@ -1110,6 +1111,7 @@ function buildItineraire() {
     content,
     extraScripts: [
       "/assets/js/itinerary-engine.js",
+      "/assets/js/routing-client.js",
       "/assets/js/itinerary-render.js",
       "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
       "/assets/js/itinerary.js",

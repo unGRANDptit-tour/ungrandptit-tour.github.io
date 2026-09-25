@@ -10,6 +10,17 @@
     { "src": "/assets/img/fiches/maison-couleur-du-temps-hero.jpg", "alt": "La Maison Couleur du Temps, Vénas (Allier)" },
     { "src": "/assets/img/fiches/maison-couleur-du-temps-pinceaux.jpg", "alt": "L'atelier du peintre Chop" }
   ],
+  "referenceCities": [
+    { "id": "paris", "label": "Paris", "coords": { "lat": 48.8566, "lon": 2.3522 } },
+    { "id": "lyon", "label": "Lyon", "coords": { "lat": 45.7640, "lon": 4.8357 } },
+    { "id": "marseille", "label": "Marseille", "coords": { "lat": 43.2965, "lon": 5.3698 } },
+    { "id": "clermont-ferrand", "label": "Clermont-Ferrand", "coords": { "lat": 45.7772, "lon": 3.0870 } },
+    { "id": "bordeaux", "label": "Bordeaux", "coords": { "lat": 44.8378, "lon": -0.5792 } },
+    { "id": "lille", "label": "Lille", "coords": { "lat": 50.6292, "lon": 3.0573 } },
+    { "id": "nantes", "label": "Nantes", "coords": { "lat": 47.2184, "lon": -1.5536 } },
+    { "id": "strasbourg", "label": "Strasbourg", "coords": { "lat": 48.5734, "lon": 7.7521 } },
+    { "id": "toulouse", "label": "Toulouse", "coords": { "lat": 43.6047, "lon": 1.4442 } }
+  ],
   "themes": {
     "patrimoine": {
       "label": "Patrimoine & architecture", "varName": "forest",
@@ -84,5 +95,8 @@
     "maxStopsPerDay": 4,
     "defaultVisitDurationMin": 60,
     "maxDaysRequestable": 14
+  },
+  "routing": {
+    "orsApiKey": "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImVlNjJiNWQyZmNkNTQzZDY4ZWU3ZWEwZTAwMDJhMTZkIiwiaCI6Im11cm11cjY0In0="
   }
 }
