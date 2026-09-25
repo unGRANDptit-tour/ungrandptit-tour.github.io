@@ -239,10 +239,34 @@
   var selectedIds = {};
   var currentBase = null;
   var currentDepart = null; // non-null quand le mode "sur la route" est actif
+  var currentRouteGeometry = null; // vrai tracé routier (OpenRouteService), sinon null = ligne droite de secours
   var map = null;
   var mapMarkers = [];
   var mapCircle = null;
   var mapRouteLine = null;
+
+  var ROUTING = window.UGPT_ROUTING || null;
+
+  /* Variante de ENGINE.nearbyOnRoute() qui mesure la distance au vrai
+     tracé routier (routeGeometry, renvoyé par ROUTING.fetchRoute) plutôt
+     qu'à la ligne droite départ->destination — même filtre/tri, juste la
+     mesure de distance qui change. Utilisée seulement quand un tracé réel
+     a pu être obtenu ; sinon on retombe sur ENGINE.nearbyOnRoute comme
+     avant. */
+  function nearbyOnRouteReal(list, routeGeometry, corridorKm) {
+    var out = [];
+    list.forEach(function (f) {
+      if (f.status && f.status !== "verifie" && f.status !== "reserve") return;
+      if (!f.coords || typeof f.coords.lat !== "number") return;
+      var r = ROUTING.projectToRoute(routeGeometry, f.coords);
+      if (r.t < -0.05 || r.t > 1.05) return;
+      if (r.distanceKm <= corridorKm) out.push({ fiche: f, distanceKm: r.distanceKm, t: r.t });
+    });
+    out.sort(function (a, b) {
+      return a.t - b.t;
+    });
+    return out;
+  }
 
   var THEME_VAR = { patrimoine: "--forest", spirituel: "--ochre", insolite: "--trail", nature: "--water" };
   function themeColor(theme) {
@@ -319,7 +343,7 @@
   if (proposalsEl) proposalsEl.addEventListener("change", onProposalChange);
   if (recoEl) recoEl.addEventListener("change", onProposalChange);
 
-  function ensureMap(base, radiusKm, entries, depart) {
+  function ensureMap(base, radiusKm, entries, depart, routeGeometry) {
     if (!mapEl || typeof L === "undefined") return;
     if (!map) {
       map = L.map(mapEl, { zoomControl: true, attributionControl: true });
@@ -344,22 +368,34 @@
     }
 
     if (depart) {
-      // Mode "sur la route" : un repère par ville, un trait pointillé entre
-      // les deux (approximatif — ce n'est pas un vrai itinéraire routier),
-      // pas de cercle puisque la zone de recherche est un couloir, pas un rayon.
+      // Mode "sur la route" : un repère par ville, et le trajet entre les
+      // deux — un vrai tracé routier (routeGeometry, via OpenRouteService)
+      // quand on a pu l'obtenir ; sinon une ligne droite en pointillés,
+      // de secours uniquement (service indisponible), pas de cercle
+      // puisque la zone de recherche est un couloir, pas un rayon.
       L.circleMarker([depart.lat, depart.lon], { radius: 7, color: "#fff", weight: 2, fillColor: cssVar("--ink", "#1a1a1a"), fillOpacity: 1 })
         .addTo(map)
         .bindPopup("<b>Votre point de départ</b>");
       L.circleMarker([base.lat, base.lon], { radius: 7, color: "#fff", weight: 2, fillColor: cssVar("--accent", "#2b4c8c"), fillOpacity: 1 })
         .addTo(map)
         .bindPopup("<b>Votre destination</b>");
-      mapRouteLine = L.polyline(
-        [
-          [depart.lat, depart.lon],
-          [base.lat, base.lon],
-        ],
-        { color: cssVar("--ink-faint", "#857e6e"), weight: 2, dashArray: "2 8" }
-      ).addTo(map);
+      if (routeGeometry && routeGeometry.length > 1) {
+        mapRouteLine = L.polyline(routeGeometry, {
+          color: cssVar("--accent-deep", "#1e3665"),
+          weight: 4,
+          opacity: 0.85,
+          lineCap: "round",
+          lineJoin: "round",
+        }).addTo(map);
+      } else {
+        mapRouteLine = L.polyline(
+          [
+            [depart.lat, depart.lon],
+            [base.lat, base.lon],
+          ],
+          { color: cssVar("--accent-deep", "#1e3665"), weight: 4, opacity: 0.85, dashArray: "10 6", lineCap: "round" }
+        ).addTo(map);
+      }
     } else {
       L.circleMarker([base.lat, base.lon], { radius: 7, color: "#fff", weight: 2, fillColor: cssVar("--ink", "#1a1a1a"), fillOpacity: 1 })
         .addTo(map)
@@ -390,26 +426,23 @@
       mapMarkers.push({ id: f.id, marker: marker });
     });
 
+    var routePts = depart && routeGeometry && routeGeometry.length > 1 ? routeGeometry : depart ? [[depart.lat, depart.lon]] : [];
     var pts = [[base.lat, base.lon]]
-      .concat(depart ? [[depart.lat, depart.lon]] : [])
+      .concat(routePts)
       .concat(
         entries.map(function (e) {
           return [e.fiche.coords.lat, e.fiche.coords.lon];
         })
       );
-    if (pts.length > 1) map.fitBounds(pts, { padding: [24, 24], maxZoom: 12 });
+    if (pts.length > 1) map.fitBounds(pts, { padding: [48, 48], maxZoom: depart ? 10 : 12 });
     else map.setView([base.lat, base.lon], 10);
     setTimeout(function () {
       map.invalidateSize();
     }, 60);
   }
 
-  function goToStep2(base, radiusKm, depart) {
-    currentBase = base;
-    currentDepart = depart || null;
-    selectedIds = {};
-
-    var inRadius = depart ? ENGINE.nearbyOnRoute(fiches, depart, base, radiusKm) : ENGINE.nearbyFiches(fiches, base, radiusKm);
+  function finishStep2(base, radiusKm, depart, inRadius, wider, routeGeometry) {
+    currentRouteGeometry = routeGeometry || null;
     var inRadiusIds = {};
     inRadius.forEach(function (e) {
       inRadiusIds[e.fiche.id] = true;
@@ -418,7 +451,6 @@
     // coups de cœur de la rédaction un peu plus loin que le rayon/couloir
     // choisi, que le visiteur n'aurait pas vus sinon — jamais mélangés aux
     // propositions "dans le rayon", toujours présentés à part.
-    var wider = depart ? ENGINE.nearbyOnRoute(fiches, depart, base, radiusKm * 2) : ENGINE.nearbyFiches(fiches, base, radiusKm * 2);
     var reco = wider
       .filter(function (e) {
         return e.fiche.redactionPick && !inRadiusIds[e.fiche.id];
@@ -427,7 +459,7 @@
 
     renderProposals(inRadius);
     renderReco(reco);
-    ensureMap(base, radiusKm, inRadius.concat(reco), depart);
+    ensureMap(base, radiusKm, inRadius.concat(reco), depart, routeGeometry);
 
     if (step2Sub) {
       if (depart) {
@@ -459,6 +491,53 @@
     step2.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  function setStep1Loading(on) {
+    if (!step1Submit) return;
+    if (on) {
+      step1Submit.disabled = true;
+      if (!step1Submit.__defaultLabel) step1Submit.__defaultLabel = step1Submit.textContent;
+      step1Submit.textContent = "Calcul de l'itinéraire routier…";
+    } else {
+      step1Submit.disabled = !selectedPlace;
+      if (step1Submit.__defaultLabel) step1Submit.textContent = step1Submit.__defaultLabel;
+    }
+  }
+
+  function goToStep2(base, radiusKm, depart) {
+    currentBase = base;
+    currentDepart = depart || null;
+    selectedIds = {};
+
+    if (depart && ROUTING && ROUTING.isConfigured()) {
+      // On essaie d'obtenir le vrai tracé routier départ -> destination :
+      // sert à la fois à dessiner un trait crédible sur la carte et à
+      // mesurer la distance des lieux candidats à la vraie route plutôt
+      // qu'à une ligne droite. En cas d'échec (service indisponible,
+      // quota, délai dépassé), on retombe silencieusement sur l'ancien
+      // calcul à vol d'oiseau — l'assistant continue de fonctionner.
+      setStep1Loading(true);
+      ROUTING.fetchRoute([depart, base])
+        .then(function (routeInfo) {
+          var inRadius = nearbyOnRouteReal(fiches, routeInfo.geometry, radiusKm);
+          var wider = nearbyOnRouteReal(fiches, routeInfo.geometry, radiusKm * 2);
+          finishStep2(base, radiusKm, depart, inRadius, wider, routeInfo.geometry);
+        })
+        .catch(function () {
+          var inRadius = ENGINE.nearbyOnRoute(fiches, depart, base, radiusKm);
+          var wider = ENGINE.nearbyOnRoute(fiches, depart, base, radiusKm * 2);
+          finishStep2(base, radiusKm, depart, inRadius, wider, null);
+        })
+        .then(function () {
+          setStep1Loading(false);
+        });
+      return;
+    }
+
+    var inRadius = depart ? ENGINE.nearbyOnRoute(fiches, depart, base, radiusKm) : ENGINE.nearbyFiches(fiches, base, radiusKm);
+    var wider = depart ? ENGINE.nearbyOnRoute(fiches, depart, base, radiusKm * 2) : ENGINE.nearbyFiches(fiches, base, radiusKm * 2);
+    finishStep2(base, radiusKm, depart, inRadius, wider, null);
+  }
+
   step1.addEventListener("submit", function (e) {
     e.preventDefault();
     if (!selectedPlace) {
@@ -487,6 +566,85 @@
     });
   }
 
+  var generateBtnDefaultLabel = generateBtn ? generateBtn.textContent : "";
+  function setGenerateLoading(on) {
+    if (!generateBtn) return;
+    generateBtn.disabled = on;
+    generateBtn.textContent = on ? "Calcul des temps de route…" : generateBtnDefaultLabel;
+  }
+
+  /* Construit, à partir d'une vraie matrice de distances/durées routières
+     (ROUTING.fetchMatrix), la fonction distanceFn attendue par
+     ENGINE.planItinerary : (fromId, toFiche) -> {distanceKm, travelMin}.
+     matrixCoords[0] est toujours le point de départ ("start") ; les
+     suivants correspondent à selectedFiches, dans le même ordre. */
+  function buildMatrixDistanceFn(matrix, selectedFiches) {
+    var idxById = {};
+    selectedFiches.forEach(function (f, i) {
+      idxById[f.id] = i + 1;
+    });
+    return function (fromId, toFiche) {
+      var fromIdx = fromId === "start" ? 0 : idxById[fromId];
+      var toIdx = idxById[toFiche.id];
+      if (fromIdx == null || toIdx == null) return null;
+      var km = matrix.distancesKm[fromIdx] ? matrix.distancesKm[fromIdx][toIdx] : null;
+      var min = matrix.durationsMin[fromIdx] ? matrix.durationsMin[fromIdx][toIdx] : null;
+      if (km == null || min == null) return null;
+      return { distanceKm: km, travelMin: min };
+    };
+  }
+
+  function finishGenerate(params, plan, email, placeRequest) {
+    window.UGPT_renderItineraryPlan(resultEl, plan, ficheById, {
+      placeRequest: placeRequest,
+      startLabel: currentDepart ? currentDepart.label : currentBase ? currentBase.label : null,
+    });
+    resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    if (!plan.ok && !placeRequest) return;
+
+    (window.UGPT ? window.UGPT.ready : Promise.resolve(false)).then(function (ok) {
+      if (!ok || !window.UGPT.db) {
+        if (noteEl)
+          noteEl.textContent =
+            "Itinéraire généré ci-dessous. Firebase n'est pas encore configuré : cette demande n'a pas pu être transmise à la rédaction pour l'instant.";
+        return;
+      }
+      var uid = window.UGPT.auth && window.UGPT.auth.currentUser ? window.UGPT.auth.currentUser.uid : null;
+      if (generateBtn) generateBtn.disabled = true;
+      window.UGPT.db
+        .collection("itinerary_requests")
+        .add({
+          status: "brouillon_auto",
+          uid: uid,
+          email: email || null,
+          placeRequest: placeRequest || null,
+          params: params,
+          plan: plan,
+          createdAt: new Date().toISOString(),
+        })
+        .then(function (ref) {
+          if (noteEl) {
+            noteEl.innerHTML =
+              (placeRequest ? "Itinéraire (et votre suggestion de lieu) transmis" : "Itinéraire transmis") +
+              ' à la rédaction pour relecture. Vous pouvez suivre son statut ici : <a href="/mon-itineraire/?id=' +
+              esc(ref.id) +
+              '">/mon-itineraire/?id=' +
+              esc(ref.id) +
+              "</a>";
+          }
+          toast("Demande envoyée");
+        })
+        .catch(function () {
+          if (noteEl)
+            noteEl.textContent = "Itinéraire généré ci-dessous, mais la demande n'a pas pu être transmise à la rédaction (erreur réseau).";
+        })
+        .then(function () {
+          if (generateBtn) generateBtn.disabled = false;
+        });
+    });
+  }
+
   if (generateBtn) {
     generateBtn.addEventListener("click", function () {
       var ids = Object.keys(selectedIds);
@@ -495,64 +653,51 @@
         return;
       }
 
+      var startCoords = currentDepart || currentBase;
       var params = {
         days: parseInt(daysInput.value, 10) || 1,
         pace: document.getElementById("it-pace").value,
         ficheIds: ids,
-        startCoords: currentDepart || currentBase,
+        startCoords: startCoords,
       };
       var email = emailEl ? emailEl.value.trim() : "";
       var placeRequest = placeRequestEl ? placeRequestEl.value.trim().slice(0, 300) : "";
 
-      var plan = ENGINE.planItinerary(fiches, params, cfg);
-      window.UGPT_renderItineraryPlan(resultEl, plan, ficheById, {
-        placeRequest: placeRequest,
-        startLabel: currentDepart ? currentDepart.label : currentBase ? currentBase.label : null,
+      var selectedFiches = ids.map(function (id) {
+        return ficheById[id];
+      }).filter(function (f) {
+        return f && f.coords;
       });
-      resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
 
-      if (!plan.ok && !placeRequest) return;
+      // Vraie matrice de distances/durées routières entre le point de
+      // départ et tous les lieux cochés : sert à regrouper les jours de
+      // façon réaliste et à afficher des temps de route exacts. Au-delà
+      // de la limite gratuite de points, ou en cas d'échec/délai dépassé,
+      // on retombe sur l'estimation habituelle à vol d'oiseau — jamais de
+      // blocage de la génération pour une question de routage.
+      var canUseMatrix =
+        ROUTING && ROUTING.isConfigured() && startCoords && selectedFiches.length && 1 + selectedFiches.length <= ROUTING.MAX_MATRIX_LOCATIONS;
 
-      (window.UGPT ? window.UGPT.ready : Promise.resolve(false)).then(function (ok) {
-        if (!ok || !window.UGPT.db) {
-          if (noteEl)
-            noteEl.textContent =
-              "Itinéraire généré ci-dessous. Firebase n'est pas encore configuré : cette demande n'a pas pu être transmise à la rédaction pour l'instant.";
-          return;
-        }
-        var uid = window.UGPT.auth && window.UGPT.auth.currentUser ? window.UGPT.auth.currentUser.uid : null;
-        generateBtn.disabled = true;
-        window.UGPT.db
-          .collection("itinerary_requests")
-          .add({
-            status: "brouillon_auto",
-            uid: uid,
-            email: email || null,
-            placeRequest: placeRequest || null,
-            params: params,
-            plan: plan,
-            createdAt: new Date().toISOString(),
-          })
-          .then(function (ref) {
-            if (noteEl) {
-              noteEl.innerHTML =
-                (placeRequest ? "Itinéraire (et votre suggestion de lieu) transmis" : "Itinéraire transmis") +
-                ' à la rédaction pour relecture. Vous pouvez suivre son statut ici : <a href="/mon-itineraire/?id=' +
-                esc(ref.id) +
-                '">/mon-itineraire/?id=' +
-                esc(ref.id) +
-                "</a>";
-            }
-            toast("Demande envoyée");
+      if (canUseMatrix) {
+        setGenerateLoading(true);
+        ROUTING.fetchMatrix([startCoords].concat(selectedFiches.map(function (f) { return f.coords; })))
+          .then(function (matrix) {
+            var distanceFn = buildMatrixDistanceFn(matrix, selectedFiches);
+            var plan = ENGINE.planItinerary(fiches, params, cfg, distanceFn);
+            finishGenerate(params, plan, email, placeRequest);
           })
           .catch(function () {
-            if (noteEl)
-              noteEl.textContent = "Itinéraire généré ci-dessous, mais la demande n'a pas pu être transmise à la rédaction (erreur réseau).";
+            var plan = ENGINE.planItinerary(fiches, params, cfg);
+            finishGenerate(params, plan, email, placeRequest);
           })
           .then(function () {
-            generateBtn.disabled = false;
+            setGenerateLoading(false);
           });
-      });
+        return;
+      }
+
+      var plan = ENGINE.planItinerary(fiches, params, cfg);
+      finishGenerate(params, plan, email, placeRequest);
     });
   }
 })();
